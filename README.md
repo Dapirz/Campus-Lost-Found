@@ -17,7 +17,6 @@ A full-stack **Lost & Found** management system for university campuses. Built w
 - [Installation](#installation)
 - [Default Accounts](#default-accounts)
 - [API Endpoints](#api-endpoints)
-- [Screenshots](#screenshots)
 - [Team](#team)
 
 ---
