@@ -34,6 +34,7 @@ Campus Lost & Found is a platform that helps students and staff report lost or f
 ## Features
 
 ### 🌐 Admin Panel (Laravel Blade)
+
 - 📊 Dashboard with report statistics
 - 📝 Report management (verify, reject, delete)
 - 👥 User management (activate/deactivate, delete)
@@ -41,6 +42,7 @@ Campus Lost & Found is a platform that helps students and staff report lost or f
 - 🖼️ Image preview for report submissions
 
 ### 📱 Mobile App (Flutter)
+
 - 🏠 Home feed with search & filter (Lost/Found/All)
 - 📸 Create report with image upload
 - 📄 Detailed report view with image gallery
@@ -55,6 +57,7 @@ Campus Lost & Found is a platform that helps students and staff report lost or f
 ## Tech Stack
 
 ### Backend
+
 | Technology | Version |
 |------------|---------|
 | PHP | ^8.3 |
@@ -64,6 +67,7 @@ Campus Lost & Found is a platform that helps students and staff report lost or f
 | Blade Templates | — |
 
 ### Mobile
+
 | Technology | Version |
 |------------|---------|
 | Flutter | ^3.11 |
@@ -199,6 +203,7 @@ flutter run
 After running `php artisan migrate --seed`, the following accounts are available:
 
 ### Admin (Web Panel)
+
 | Email | Password |
 |-------|----------|
 | `admin@campuslostfound.com` | `admin123` |
@@ -206,6 +211,7 @@ After running `php artisan migrate --seed`, the following accounts are available
 > Access the admin panel at: `http://127.0.0.1:8000/admin/login`
 
 ### Students (Mobile App)
+
 | Name | Email | Password |
 |------|-------|----------|
 | Budi Santoso | `budi@student.telkomuniversity.ac.id` | `password123` |
@@ -219,6 +225,7 @@ After running `php artisan migrate --seed`, the following accounts are available
 ## API Endpoints
 
 ### Public (No Auth Required)
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `POST` | `/api/auth/register` | Register new user |
@@ -227,6 +234,7 @@ After running `php artisan migrate --seed`, the following accounts are available
 | `GET` | `/api/reports/{id}` | Report detail |
 
 ### Protected (Bearer Token Required)
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `POST` | `/api/auth/logout` | Logout |
@@ -239,24 +247,6 @@ After running `php artisan migrate --seed`, the following accounts are available
 | `PUT` | `/api/user/profile` | Update profile |
 | `GET` | `/api/notifications` | Get notifications |
 | `PATCH` | `/api/notifications/{id}/read` | Mark notification as read |
-
----
-
-## Screenshots
-
-> *Screenshots will be added here*
-
-<!-- 
-### Mobile App
-| Login | Home | Report Detail |
-|-------|------|---------------|
-| ![Login](screenshots/login.png) | ![Home](screenshots/home.png) | ![Detail](screenshots/detail.png) |
-
-### Admin Panel
-| Dashboard | Reports | Users |
-|-----------|---------|-------|
-| ![Dashboard](screenshots/dashboard.png) | ![Reports](screenshots/reports.png) | ![Users](screenshots/users.png) |
--->
 
 ---
 
