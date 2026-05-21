@@ -33,7 +33,7 @@ Route::get('/reports/{id}', [ReportController::class, 'show'])->where('id', '[0-
 // PROTECTED ROUTES (butuh Sanctum Bearer token)
 // ============================================================
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'api.active'])->group(function () {
     // Auth
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);

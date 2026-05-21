@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import '../models/report_model.dart';
+import '../providers/auth_provider.dart';
 
 class ReportService {
   /// GET /reports
@@ -117,8 +118,10 @@ class ReportService {
         return reportsJson
             .map((json) => ReportModel.fromJson(json))
             .toList();
+      } else if (response.statusCode == 401 || response.statusCode == 403) {
+        AuthProvider.instance?.forceLogout();
       }
-
+      
       return <ReportModel>[];
     } on TimeoutException {
       return <ReportModel>[];
@@ -172,6 +175,12 @@ class ReportService {
           'success': true,
           'message': data['message'] ?? 'Report submitted successfully',
         };
+      } else if (response.statusCode == 401 || response.statusCode == 403) {
+        AuthProvider.instance?.forceLogout();
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Sesi Anda telah berakhir atau akun dinonaktifkan.',
+        };
       } else if (response.statusCode == 422) {
         return {
           'success': false,
@@ -209,6 +218,10 @@ class ReportService {
           .timeout(ApiConfig.timeout);
 
       final data = jsonDecode(response.body);
+
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        AuthProvider.instance?.forceLogout();
+      }
 
       return {
         'success': response.statusCode == 200 && data['success'] == true,
@@ -252,6 +265,12 @@ class ReportService {
         return {
           'success': true,
           'message': data['message'] ?? 'Report marked as resolved',
+        };
+      } else if (response.statusCode == 401 || response.statusCode == 403) {
+        AuthProvider.instance?.forceLogout();
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Sesi Anda telah berakhir atau akun dinonaktifkan.',
         };
       } else {
         return {

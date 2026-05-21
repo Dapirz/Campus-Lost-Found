@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import '../models/user_model.dart';
+import '../providers/auth_provider.dart';
 
 class AuthService {
   /// POST /auth/login
@@ -154,6 +155,8 @@ class AuthService {
         if (data['success'] == true) {
           return UserModel.fromJson(data['data']);
         }
+      } else if (response.statusCode == 401 || response.statusCode == 403) {
+        AuthProvider.instance?.forceLogout();
       }
       return null;
     } catch (e) {
@@ -190,6 +193,13 @@ class AuthService {
         return {
           'success': true,
           'message': data['message'] ?? 'Profile updated successfully',
+          'errors': null,
+        };
+      } else if (response.statusCode == 401 || response.statusCode == 403) {
+        AuthProvider.instance?.forceLogout();
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Sesi Anda telah berakhir atau akun dinonaktifkan.',
           'errors': null,
         };
       }

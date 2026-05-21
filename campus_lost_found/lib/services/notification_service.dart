@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import '../models/notification_model.dart';
+import '../providers/auth_provider.dart';
 
 class NotificationService {
   Future<List<NotificationModel>> getNotifications(String token) async {
@@ -21,8 +22,10 @@ class NotificationService {
         return notificationsJson
             .map((json) => NotificationModel.fromJson(json))
             .toList();
+      } else if (response.statusCode == 401 || response.statusCode == 403) {
+        AuthProvider.instance?.forceLogout();
       }
-
+ 
       return <NotificationModel>[];
     } on TimeoutException {
       return <NotificationModel>[];
@@ -40,6 +43,11 @@ class NotificationService {
           )
           .timeout(ApiConfig.timeout);
 
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        AuthProvider.instance?.forceLogout();
+        return false;
+      }
+
       final data = jsonDecode(response.body);
       return response.statusCode == 200 && data['success'] == true;
     } catch (e) {
@@ -56,6 +64,11 @@ class NotificationService {
             body: jsonEncode({'fcm_token': fcmToken}),
           )
           .timeout(ApiConfig.timeout);
+
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        AuthProvider.instance?.forceLogout();
+        return false;
+      }
 
       final data = jsonDecode(response.body);
       return response.statusCode == 200 && data['success'] == true;

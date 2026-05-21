@@ -140,6 +140,17 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
             ? Image.network(
                 heroImageUrl,
                 fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    color: AppColors.neutral,
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  );
+                },
                 errorBuilder: (context, error, stackTrace) => _buildImagePlaceholder(),
               )
             : _buildImagePlaceholder(),
@@ -169,9 +180,23 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
           _buildTitleSection(report),
           const SizedBox(height: 12),
 
+          // Card Alasan Penolakan
+          if (report.status == 'rejected' &&
+              report.rejectionReason != null &&
+              report.rejectionReason!.isNotEmpty) ...[
+            _buildRejectionReasonCard(report),
+            const SizedBox(height: 12),
+          ],
+
           // Card Deskripsi
           if (report.description != null && report.description!.isNotEmpty)
             _buildDescriptionCard(report),
+
+          // Card Admin Notes (Khusus laporan yang di-reject)
+          if (report.status == 'rejected' &&
+              report.adminNotes != null &&
+              report.adminNotes!.isNotEmpty)
+            _buildAdminNotesCard(report),
 
           // Card Reported By
           _buildReporterCard(report),
@@ -606,6 +631,102 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         );
       }
     }
+  }
+
+  Widget _buildRejectionReasonCard(ReportModel report) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF2F2),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFFCA5A5).withValues(alpha: 0.4)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.gavel_outlined, size: 18, color: Color(0xFFDC2626)),
+              SizedBox(width: 8),
+              Text(
+                'Rejection Reason',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF991B1B),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            report.rejectionReason!,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Color(0xFF7F1D1D),
+              height: 1.6,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdminNotesCard(ReportModel report) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.speaker_notes_outlined, size: 18, color: AppColors.primary),
+              SizedBox(width: 8),
+              Text(
+                'Admin Notes',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDark,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            report.adminNotes!,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.secondary,
+              height: 1.6,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // === Helpers ===

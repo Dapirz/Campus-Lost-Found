@@ -121,7 +121,7 @@
                             <p class="dashboard-stat-label">Resolved</p>
                             <h2 class="dashboard-stat-value">{{ $total_resolved }}</h2>
                         </div>
-                        <span class="stat-icon" style="background: var(--tertiary-light); color: var(--tertiary);">
+                        <span class="stat-icon" style="background: #D1FAE5; color: #065F46;">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                                 <path d="m12 3 7 3v5c0 4.45-3 8.42-7 9.5-4-1.08-7-5.05-7-9.5V6l7-3Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                 <path d="m9.3 12.3 1.9 1.9 3.7-4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -140,7 +140,7 @@
                             <p class="dashboard-stat-label">Total Users</p>
                             <h2 class="dashboard-stat-value">{{ $total_users }}</h2>
                         </div>
-                        <span class="stat-icon" style="background: #F3E8FF; color: #7C3AED;">
+                        <span class="stat-icon" style="background: #FDF2E9; color: #C2410C;">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                                 <path d="M16 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                 <circle cx="9.5" cy="7" r="4" stroke-width="1.8"/>

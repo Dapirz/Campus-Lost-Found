@@ -99,9 +99,9 @@
         }
 
         .admin-nav .nav-link.active {
-            background: rgba(0, 82, 204, 0.12);
+            background: var(--primary-light);
             color: var(--primary);
-            box-shadow: inset 0 0 0 1px rgba(0, 82, 204, 0.08);
+            box-shadow: inset 0 0 0 1px rgba(123, 91, 74, 0.15);
         }
 
         .menu-icon {
@@ -117,7 +117,7 @@
         }
 
         .navbar-toggler:focus {
-            box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.12);
+            box-shadow: 0 0 0 3px rgba(123, 91, 74, 0.15);
         }
 
         .admin-user-chip {
@@ -217,7 +217,7 @@
         }
 
         .table tbody tr:hover {
-            background: #F8FAFF;
+            background: #FAF5F0;
         }
 
         .table tbody td {
@@ -245,7 +245,7 @@
         .form-control:focus,
         .form-select:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.1);
+            box-shadow: 0 0 0 3px rgba(123, 91, 74, 0.15);
         }
 
         .btn-primary {
@@ -273,8 +273,8 @@
         }
 
         .badge-verified {
-            background: #DBEAFE;
-            color: #1E40AF;
+            background: var(--tertiary-light);
+            color: var(--tertiary);
         }
 
         .badge-resolved {
@@ -372,6 +372,31 @@
                 border-top: 1px solid var(--neutral-dark);
                 align-items: flex-start !important;
             }
+        }
+
+        /* Pagination Override to Earth-Tones */
+        .pagination .page-item.active .page-link {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: var(--white);
+        }
+
+        .pagination .page-link {
+            color: var(--primary);
+            border-color: var(--neutral-dark);
+            background-color: var(--white);
+        }
+
+        .pagination .page-link:hover {
+            background-color: var(--primary-light);
+            border-color: var(--neutral-dark);
+            color: var(--primary-dark);
+        }
+
+        .pagination .page-item.disabled .page-link {
+            background-color: var(--neutral);
+            border-color: var(--neutral-dark);
+            color: var(--text-muted);
         }
     </style>
 </head>

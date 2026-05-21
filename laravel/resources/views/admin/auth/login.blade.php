@@ -14,6 +14,7 @@
     <style>
         :root {
             --primary: #7B5B4A;
+            --primary-dark: #5E4336;
             --secondary: #A38E78;
             --tertiary: #5E7654;
             --neutral: #FAF2EB;
@@ -168,7 +169,7 @@
 
         .form-control:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.1);
+            box-shadow: 0 0 0 3px rgba(123, 91, 74, 0.15);
         }
 
         .btn-signin {
@@ -182,7 +183,7 @@
         }
 
         .btn-signin:hover {
-            background: #003D99;
+            background: var(--primary-dark);
         }
 
         .login-note {

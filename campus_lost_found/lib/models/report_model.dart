@@ -49,6 +49,8 @@ class ReportModel {
   final String? imageUrl; // URL foto pertama (dari list endpoint)
   final List<ReportImageModel> images; // Semua foto (dari detail endpoint)
   final ReporterModel reporter;
+  final String? rejectionReason;
+  final String? adminNotes;
 
   ReportModel({
     required this.id,
@@ -62,6 +64,8 @@ class ReportModel {
     this.imageUrl,
     this.images = const [],
     required this.reporter,
+    this.rejectionReason,
+    this.adminNotes,
   });
 
   factory ReportModel.fromJson(Map<String, dynamic> json) {
@@ -93,6 +97,8 @@ class ReportModel {
       reporter: json['reporter'] != null
           ? ReporterModel.fromJson(json['reporter'])
           : ReporterModel(id: 0, name: 'Unknown'),
+      rejectionReason: json['rejection_reason'],
+      adminNotes: json['admin_notes'],
     );
   }
 }

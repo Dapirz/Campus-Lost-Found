@@ -5,6 +5,7 @@ import '../../models/report_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/report_provider.dart';
 import '../auth/login_screen.dart';
+import 'report_detail_screen.dart';
 
 class MyReportsScreen extends StatefulWidget {
   const MyReportsScreen({super.key});
@@ -20,7 +21,7 @@ class _MyReportsScreenState extends State<MyReportsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     Future.microtask(_loadReports);
   }
 
@@ -67,17 +68,25 @@ class _MyReportsScreenState extends State<MyReportsScreen>
                 color: AppColors.white,
                 child: TabBar(
                   controller: _tabController,
+                  isScrollable: false,
                   indicatorColor: AppColors.primary,
                   labelColor: AppColors.primary,
                   unselectedLabelColor: AppColors.textMuted,
-                  labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-                  unselectedLabelStyle:
-                      const TextStyle(fontWeight: FontWeight.normal),
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+                  labelStyle: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                  unselectedLabelStyle: const TextStyle(
+                    fontWeight: FontWeight.normal,
+                    fontSize: 12,
+                  ),
                   tabs: const [
                     Tab(text: 'All'),
                     Tab(text: 'Pending'),
                     Tab(text: 'Verified'),
                     Tab(text: 'Resolved'),
+                    Tab(text: 'Rejected'),
                   ],
                 ),
               ),
@@ -89,8 +98,10 @@ class _MyReportsScreenState extends State<MyReportsScreen>
           child: Consumer<ReportProvider>(
             builder: (context, provider, _) {
               if (provider.isLoadingMyReports && provider.myReports.isEmpty) {
-                return const Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: 3,
+                  itemBuilder: (context, index) => const _SkeletonCard(),
                 );
               }
 
@@ -115,6 +126,11 @@ class _MyReportsScreenState extends State<MyReportsScreen>
                   _ReportList(
                     reports: _filterReports(provider.myReports, 'resolved'),
                     emptyText: 'No resolved reports',
+                    onRefresh: _loadReports,
+                  ),
+                  _ReportList(
+                    reports: _filterReports(provider.myReports, 'rejected'),
+                    emptyText: 'No rejected reports',
                     onRefresh: _loadReports,
                   ),
                 ],
@@ -186,27 +202,44 @@ class MyReportCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ReportDetailScreen(reportId: report.id),
           ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildThumbnail(),
-          const SizedBox(width: 12),
-          Expanded(child: _buildContent(context)),
-        ],
+        ).then((_) {
+          if (context.mounted) {
+            final token = context.read<AuthProvider>().token;
+            if (token != null) {
+              context.read<ReportProvider>().loadMyReports(token);
+            }
+          }
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildThumbnail(),
+            const SizedBox(width: 12),
+            Expanded(child: _buildContent(context)),
+          ],
+        ),
       ),
     );
   }
@@ -221,6 +254,22 @@ class MyReportCard extends StatelessWidget {
             ? Image.network(
                 report.imageUrl!,
                 fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    color: AppColors.neutral,
+                    child: const Center(
+                      child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  );
+                },
                 errorBuilder: (context, error, stackTrace) =>
                     _thumbnailPlaceholder(),
               )
@@ -269,6 +318,41 @@ class MyReportCard extends StatelessWidget {
           report.createdAt.isNotEmpty ? report.createdAt : report.incidentDate,
           style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
         ),
+        if (report.status == 'rejected' &&
+            report.rejectionReason != null &&
+            report.rejectionReason!.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFEF2F2),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFFCA5A5).withValues(alpha: 0.5)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  color: Color(0xFFDC2626),
+                  size: 16,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Reason: ${report.rejectionReason}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF991B1B),
+                      height: 1.3,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: 8),
         Row(
           children: [
@@ -509,3 +593,145 @@ class _LoginPrompt extends StatelessWidget {
     );
   }
 }
+
+class _SkeletonCard extends StatefulWidget {
+  const _SkeletonCard();
+
+  @override
+  State<_SkeletonCard> createState() => _SkeletonCardState();
+}
+
+class _SkeletonCardState extends State<_SkeletonCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              // Thumbnail Skeleton
+              Container(
+                width: 70,
+                height: 70,
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(10),
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.grey[200]!,
+                      Colors.grey[300]!,
+                      Colors.grey[200]!,
+                    ],
+                    stops: const [0.15, 0.5, 0.85],
+                    begin: Alignment(-1.0 + (_controller.value * 2.5), -0.2),
+                    end: Alignment(1.0 + (_controller.value * 2.5), 0.2),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title Skeleton
+                    Container(
+                      width: double.infinity,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(4),
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.grey[200]!,
+                            Colors.grey[300]!,
+                            Colors.grey[200]!,
+                          ],
+                          stops: const [0.15, 0.5, 0.85],
+                          begin: Alignment(-1.0 + (_controller.value * 2.5), -0.2),
+                          end: Alignment(1.0 + (_controller.value * 2.5), 0.2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    // Status Badge Skeleton
+                    Container(
+                      width: 70,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(6),
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.grey[200]!,
+                            Colors.grey[300]!,
+                            Colors.grey[200]!,
+                          ],
+                          stops: const [0.15, 0.5, 0.85],
+                          begin: Alignment(-1.0 + (_controller.value * 2.5), -0.2),
+                          end: Alignment(1.0 + (_controller.value * 2.5), 0.2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    // Date Skeleton
+                    Container(
+                      width: 130,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(4),
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.grey[200]!,
+                            Colors.grey[300]!,
+                            Colors.grey[200]!,
+                          ],
+                          stops: const [0.15, 0.5, 0.85],
+                          begin: Alignment(-1.0 + (_controller.value * 2.5), -0.2),
+                          end: Alignment(1.0 + (_controller.value * 2.5), 0.2),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+

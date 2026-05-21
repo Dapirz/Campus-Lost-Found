@@ -58,7 +58,9 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
               children: [
                 // Header
                 Text(
-                  _selectedType == 'found' ? 'Report Found Item' : 'Report Lost Item',
+                  _selectedType == 'found'
+                      ? 'Report Found Item'
+                      : 'Report Lost Item',
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -68,7 +70,11 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                 const SizedBox(height: 4),
                 const Text(
                   'Help reunite someone with their lost belongings by providing details below.',
-                  style: TextStyle(fontSize: 13, color: AppColors.textMuted, height: 1.4),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textMuted,
+                    height: 1.4,
+                  ),
                 ),
                 const SizedBox(height: 20),
 
@@ -107,14 +113,32 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         children: [
           const Text(
             'Report Type *',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textDark),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textDark,
+            ),
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: _typeCard('lost', 'Lost Item', Icons.search_off, AppColors.error)),
+              Expanded(
+                child: _typeCard(
+                  'lost',
+                  'Lost Item',
+                  Icons.search_off,
+                  AppColors.error,
+                ),
+              ),
               const SizedBox(width: 12),
-              Expanded(child: _typeCard('found', 'Found Item', Icons.check_circle_outline, AppColors.success)),
+              Expanded(
+                child: _typeCard(
+                  'found',
+                  'Found Item',
+                  Icons.check_circle_outline,
+                  AppColors.success,
+                ),
+              ),
             ],
           ),
         ],
@@ -130,7 +154,9 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFEBF2FF) : AppColors.white,
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.08)
+              : AppColors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? AppColors.primary : AppColors.borderDefault,
@@ -139,7 +165,11 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         ),
         child: Column(
           children: [
-            Icon(icon, size: 28, color: isSelected ? AppColors.primary : iconColor),
+            Icon(
+              icon,
+              size: 28,
+              color: isSelected ? AppColors.primary : iconColor,
+            ),
             const SizedBox(height: 8),
             Text(
               label,
@@ -164,11 +194,19 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         children: [
           const Row(
             children: [
-              Icon(Icons.camera_alt_outlined, size: 18, color: AppColors.primary),
+              Icon(
+                Icons.camera_alt_outlined,
+                size: 18,
+                color: AppColors.primary,
+              ),
               SizedBox(width: 8),
               Text(
                 'Item Photo',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDark,
+                ),
               ),
             ],
           ),
@@ -189,20 +227,33 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.neutral,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.borderDefault, style: BorderStyle.solid),
+                  border: Border.all(
+                    color: AppColors.borderDefault,
+                    style: BorderStyle.solid,
+                  ),
                 ),
                 child: const Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.camera_alt_outlined, size: 36, color: AppColors.textMuted),
+                    Icon(
+                      Icons.camera_alt_outlined,
+                      size: 36,
+                      color: AppColors.textMuted,
+                    ),
                     SizedBox(height: 8),
                     Text(
                       'Tap to upload a clear photo',
-                      style: TextStyle(fontSize: 13, color: AppColors.textMuted),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textMuted,
+                      ),
                     ),
                     Text(
                       'JPEG, PNG up to 2MB',
-                      style: TextStyle(fontSize: 11, color: AppColors.textMuted),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textMuted,
+                      ),
                     ),
                   ],
                 ),
@@ -241,7 +292,11 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                               color: AppColors.error,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.close, size: 14, color: AppColors.white),
+                            child: const Icon(
+                              Icons.close,
+                              size: 14,
+                              color: AppColors.white,
+                            ),
                           ),
                         ),
                       ),
@@ -257,9 +312,17 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
           if (_selectedImages.isNotEmpty && _selectedImages.length < 3)
             Row(
               children: [
-                _photoButton('Galeri', Icons.photo_library_outlined, _pickFromGallery),
+                _photoButton(
+                  'Galeri',
+                  Icons.photo_library_outlined,
+                  _pickFromGallery,
+                ),
                 const SizedBox(width: 8),
-                _photoButton('Kamera', Icons.camera_alt_outlined, _pickFromCamera),
+                _photoButton(
+                  'Kamera',
+                  Icons.camera_alt_outlined,
+                  _pickFromCamera,
+                ),
               ],
             ),
 
@@ -268,9 +331,17 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
               padding: const EdgeInsets.only(top: 8),
               child: Row(
                 children: [
-                  _photoButton('Choose from Gallery', Icons.photo_library_outlined, _pickFromGallery),
+                  _photoButton(
+                    'Choose from Gallery',
+                    Icons.photo_library_outlined,
+                    _pickFromGallery,
+                  ),
                   const SizedBox(width: 8),
-                  _photoButton('Kamera', Icons.camera_alt_outlined, _pickFromCamera),
+                  _photoButton(
+                    'Kamera',
+                    Icons.camera_alt_outlined,
+                    _pickFromCamera,
+                  ),
                 ],
               ),
             ),
@@ -303,18 +374,28 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         children: [
           const Row(
             children: [
-              Icon(Icons.description_outlined, size: 18, color: AppColors.primary),
+              Icon(
+                Icons.description_outlined,
+                size: 18,
+                color: AppColors.primary,
+              ),
               SizedBox(width: 8),
               Text(
                 'Item Details',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDark,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 16),
 
           // Judul
-          _fieldLabel('What did you ${_selectedType == 'found' ? 'find' : 'lose'}?'),
+          _fieldLabel(
+            'What did you ${_selectedType == 'found' ? 'find' : 'lose'}?',
+          ),
           const SizedBox(height: 6),
           TextFormField(
             controller: _titleController,
@@ -337,7 +418,8 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
               'Any unique marks, brands, or contents that help identify it...',
             ),
             validator: (v) {
-              if (v == null || v.trim().isEmpty) return 'Description is required';
+              if (v == null || v.trim().isEmpty)
+                return 'Description is required';
               if (v.trim().length < 10) return 'Minimum 10 characters';
               return null;
             },
@@ -355,23 +437,37 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         children: [
           const Row(
             children: [
-              Icon(Icons.location_on_outlined, size: 18, color: AppColors.primary),
+              Icon(
+                Icons.location_on_outlined,
+                size: 18,
+                color: AppColors.primary,
+              ),
               SizedBox(width: 8),
               Text(
                 'Where & When',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textDark),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDark,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 16),
 
           // Lokasi
-          _fieldLabel('Location ${_selectedType == 'found' ? 'Found' : 'Lost'}'),
+          _fieldLabel(
+            'Location ${_selectedType == 'found' ? 'Found' : 'Lost'}',
+          ),
           const SizedBox(height: 6),
           TextFormField(
             controller: _locationController,
-            decoration: _inputDecoration('Search address or place...').copyWith(
-              prefixIcon: const Icon(Icons.search, color: AppColors.textMuted, size: 20),
+            decoration: _inputDecoration('Address or place...').copyWith(
+              prefixIcon: const Icon(
+                Icons.search,
+                color: AppColors.textMuted,
+                size: 20,
+              ),
             ),
             validator: (v) {
               if (v == null || v.trim().isEmpty) return 'Location is required';
@@ -388,7 +484,11 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
             readOnly: true,
             onTap: _pickDate,
             decoration: _inputDecoration('mm/dd/yyyy').copyWith(
-              prefixIcon: const Icon(Icons.calendar_today_outlined, color: AppColors.textMuted, size: 18),
+              prefixIcon: const Icon(
+                Icons.calendar_today_outlined,
+                color: AppColors.textMuted,
+                size: 18,
+              ),
             ),
             validator: (v) {
               if (v == null || v.trim().isEmpty) return 'Date is required';
@@ -411,7 +511,10 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
             ? const SizedBox(
                 width: 18,
                 height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.white),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.white,
+                ),
               )
             : const Icon(Icons.send_outlined, size: 18),
         label: Text(
@@ -425,7 +528,9 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
           foregroundColor: AppColors.white,
           disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.6),
           disabledForegroundColor: AppColors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       ),
     );
@@ -439,7 +544,10 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       return;
     }
     try {
-      final picked = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+      final picked = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
       if (picked != null) {
         setState(() => _selectedImages.add(File(picked.path)));
       }
@@ -454,7 +562,10 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       return;
     }
     try {
-      final picked = await _picker.pickImage(source: ImageSource.camera, imageQuality: 80);
+      final picked = await _picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 80,
+      );
       if (picked != null) {
         setState(() => _selectedImages.add(File(picked.path)));
       }
@@ -484,10 +595,22 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         _selectedDate = picked;
         // Format tampilan: dd MMMM yyyy
         const months = [
-          '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-          'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+          '',
+          'Januari',
+          'Februari',
+          'Maret',
+          'April',
+          'Mei',
+          'Juni',
+          'Juli',
+          'Agustus',
+          'September',
+          'Oktober',
+          'November',
+          'Desember',
         ];
-        _dateController.text = '${picked.day} ${months[picked.month]} ${picked.year}';
+        _dateController.text =
+            '${picked.day} ${months[picked.month]} ${picked.year}';
       });
     }
   }
@@ -532,16 +655,22 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Report submitted successfully! ✓',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
+                Text(
+                  'Report submitted successfully! ✓',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
                 SizedBox(height: 2),
-                Text('Your report will be reviewed by an admin',
-                    style: TextStyle(fontSize: 12)),
+                Text(
+                  'Your report will be reviewed by an admin',
+                  style: TextStyle(fontSize: 12),
+                ),
               ],
             ),
             backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
             duration: const Duration(seconds: 3),
           ),
         );

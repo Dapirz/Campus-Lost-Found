@@ -21,14 +21,16 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _currentNavIndex = 0;
   Timer? _debounce;
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _homeScrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Load reports on first launch
     Future.microtask(() {
       if (mounted) {
@@ -43,9 +45,35 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _homeScrollController.dispose();
     _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _refreshTab(_currentNavIndex);
+    }
+  }
+
+  void _refreshTab(int index) {
+    if (!mounted) return;
+    if (index == 0) {
+      context.read<ReportProvider>().loadReports(refresh: true);
+    } else if (index == 1) {
+      final token = context.read<AuthProvider>().token;
+      if (token != null) {
+        context.read<ReportProvider>().loadMyReports(token);
+      }
+    } else if (index == 3) {
+      final token = context.read<AuthProvider>().token;
+      if (token != null) {
+        context.read<NotificationProvider>().loadNotifications(token);
+      }
+    }
   }
 
   void _onSearchChanged(String query) {
@@ -68,12 +96,34 @@ class _HomeScreenState extends State<HomeScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const CreateReportScreen()),
-      );
+      ).then((_) {
+        // Automatically refresh tabs when coming back from creation screen
+        if (mounted) {
+          _refreshTab(0);
+          _refreshTab(1);
+        }
+      });
       return;
     }
 
-    if (index == _currentNavIndex) return;
+    if (index == _currentNavIndex) {
+      // Tapping active tab again: scroll to top and refresh!
+      if (index == 0) {
+        if (_homeScrollController.hasClients) {
+          _homeScrollController.animateTo(
+            0.0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      }
+      _refreshTab(index);
+      return;
+    }
     setState(() => _currentNavIndex = index);
+    
+    // Auto-refresh when switching tabs
+    _refreshTab(index);
   }
 
   void _showLoginRequiredDialog() {
@@ -120,6 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _HomeFeedBody(
               searchController: _searchController,
               onSearchChanged: _onSearchChanged,
+              scrollController: _homeScrollController,
             ),
             // Index 1 — My Reports
             const MyReportsScreen(),
@@ -147,10 +198,12 @@ class _HomeScreenState extends State<HomeScreen> {
 class _HomeFeedBody extends StatelessWidget {
   final TextEditingController searchController;
   final ValueChanged<String> onSearchChanged;
+  final ScrollController scrollController;
 
   const _HomeFeedBody({
     required this.searchController,
     required this.onSearchChanged,
+    required this.scrollController,
   });
 
   @override
@@ -165,29 +218,21 @@ class _HomeFeedBody extends StatelessWidget {
     );
   }
 
-  /// Header: "FoundIt!" branding + search icon
+  /// Header: "FoundIt!" branding
   Widget _buildHeader() {
     return Container(
       color: AppColors.white,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Campus Lost & Found',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: AppColors.primary,
             ),
-          ),
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.search, color: AppColors.secondary),
-                onPressed: () {},
-              ),
-            ],
           ),
         ],
       ),
@@ -314,6 +359,7 @@ class _HomeFeedBody extends StatelessWidget {
             color: AppColors.primary,
             onRefresh: () => provider.loadReports(refresh: true),
             child: ListView.builder(
+              controller: scrollController,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: provider.reports.length + (provider.hasMore ? 1 : 0),
               itemBuilder: (context, index) {
@@ -345,7 +391,11 @@ class _HomeFeedBody extends StatelessWidget {
                           reportId: report.id,
                         ),
                       ),
-                    );
+                    ).then((_) {
+                      if (context.mounted) {
+                        context.read<ReportProvider>().loadReports(refresh: true);
+                      }
+                    });
                   },
                 );
               },

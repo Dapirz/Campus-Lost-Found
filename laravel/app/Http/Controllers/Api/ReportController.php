@@ -84,6 +84,8 @@ class ReportController extends Controller
                 'longitude'     => $report->longitude,
                 'incident_date' => $report->incident_date?->format('Y-m-d'),
                 'status'        => $report->status,
+                'rejection_reason' => $report->rejection_reason,
+                'admin_notes'   => $report->admin_notes,
                 'images'        => $report->reportImages->map(fn (ReportImage $img) => [
                     'id'  => $img->id,
                     'url' => $img->image_url,
@@ -173,6 +175,8 @@ class ReportController extends Controller
                     'incident_date' => $report->incident_date?->format('Y-m-d'),
                     'status'        => $report->status,
                     'image_url'     => $report->image_url,
+                    'rejection_reason' => $report->rejection_reason,
+                    'admin_notes'   => $report->admin_notes,
                     'created_at'    => $report->created_at->toIso8601String(),
                 ];
             });

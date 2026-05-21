@@ -6,6 +6,13 @@ import '../services/auth_service.dart';
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
 
+  static AuthProvider? _instance;
+  static AuthProvider? get instance => _instance;
+
+  AuthProvider() {
+    _instance = this;
+  }
+
   UserModel? _user;
   String? _token;
   bool _isLoading = false;
@@ -18,6 +25,17 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isLoggedIn => _isLoggedIn;
   bool get isInitialized => _isInitialized;
+
+  /// Force user logout immediately (used on session expiry or account deactivation)
+  void forceLogout() {
+    _user = null;
+    _token = null;
+    _isLoggedIn = false;
+    notifyListeners();
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.remove('auth_token');
+    });
+  }
 
   /// Inisialisasi: load token dari SharedPreferences,
   /// kalau ada token → panggil getMe() untuk validasi,
