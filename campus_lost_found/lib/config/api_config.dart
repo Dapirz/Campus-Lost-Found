@@ -1,6 +1,6 @@
 class ApiConfig {
   // static const String baseUrl = 'http://10.0.2.2:8000/api'; // Emulator
-  static const String baseUrl = 'http://192.168.18.166:8000/api'; // mobile
+  static const String baseUrl = 'http://[IP_ADDRESS]/api'; // mobile
 
   static const Duration timeout = Duration(seconds: 15);
 
@@ -18,7 +18,9 @@ class ApiConfig {
     if (message == null || message.isEmpty) return '';
 
     // Pola ekspresi reguler untuk menerjemahkan notifikasi laporan yang diverifikasi secara dinamis
-    final verifiedRegex = RegExp(r'^Laporan "(.+)" kamu sudah diverifikasi dan dipublikasikan\.$');
+    final verifiedRegex = RegExp(
+      r'^Laporan "(.+)" kamu sudah diverifikasi dan dipublikasikan\.$',
+    );
     if (verifiedRegex.hasMatch(message)) {
       final match = verifiedRegex.firstMatch(message);
       final title = match?.group(1) ?? '';
@@ -26,7 +28,9 @@ class ApiConfig {
     }
 
     // Pola ekspresi reguler untuk menerjemahkan notifikasi laporan yang ditolak secara dinamis
-    final rejectedRegex = RegExp(r'^Laporan "(.+)" kamu ditolak karena tidak memenuhi ketentuan\.$');
+    final rejectedRegex = RegExp(
+      r'^Laporan "(.+)" kamu ditolak karena tidak memenuhi ketentuan\.$',
+    );
     if (rejectedRegex.hasMatch(message)) {
       final match = rejectedRegex.firstMatch(message);
       final title = match?.group(1) ?? '';
@@ -46,17 +50,20 @@ class ApiConfig {
       'Validasi gagal': 'Validation failed',
       'Profil berhasil diupdate': 'Profile successfully updated',
       'Laporan tidak ditemukan': 'Report not found',
-      'Laporan berhasil dikirim dan menunggu verifikasi admin': 'Report successfully submitted and awaiting admin verification',
+      'Laporan berhasil dikirim dan menunggu verifikasi admin':
+          'Report successfully submitted and awaiting admin verification',
       'Akses ditolak': 'Access denied',
       'Laporan berhasil dihapus': 'Report successfully deleted',
-      'Akses ditolak atau laporan belum diverifikasi': 'Access denied or report not yet verified',
+      'Akses ditolak atau laporan belum diverifikasi':
+          'Access denied or report not yet verified',
       'Laporan ditandai sebagai selesai': 'Report marked as resolved',
       'FCM token berhasil disimpan': 'FCM token successfully saved',
       'Notifikasi tidak ditemukan': 'Notification not found',
       'Notifikasi ditandai sudah dibaca': 'Notification marked as read',
       'Registrasi berhasil': 'Registration successful',
       'Kredensial tidak valid': 'Invalid credentials',
-      'Akun Anda telah dinonaktifkan oleh Admin. Hubungi dukungan untuk informasi lebih lanjut.': 'Your account has been deactivated by the Admin. Please contact support for further information.',
+      'Akun Anda telah dinonaktifkan oleh Admin. Hubungi dukungan untuk informasi lebih lanjut.':
+          'Your account has been deactivated by the Admin. Please contact support for further information.',
       'Login berhasil': 'Login successful',
       'Logout berhasil': 'Logout successful',
     };
@@ -100,4 +107,3 @@ class ApiConfig {
     return false;
   }
 }
-
