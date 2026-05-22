@@ -40,28 +40,39 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final wantsPasswordChange = _currentPasswordController.text.isNotEmpty ||
+    final wantsPasswordChange =
+        _currentPasswordController.text.isNotEmpty ||
         _passwordController.text.isNotEmpty ||
         _passwordConfirmationController.text.isNotEmpty;
 
     final result = await context.read<AuthProvider>().updateProfile(
-          name: _nameController.text.trim(),
-          currentPassword: wantsPasswordChange
-              ? _currentPasswordController.text
-              : null,
-          password: wantsPasswordChange ? _passwordController.text : null,
-          passwordConfirmation: wantsPasswordChange
-              ? _passwordConfirmationController.text
-              : null,
-        );
+      name: _nameController.text.trim(),
+      currentPassword: wantsPasswordChange
+          ? _currentPasswordController.text
+          : null,
+      password: wantsPasswordChange ? _passwordController.text : null,
+      passwordConfirmation: wantsPasswordChange
+          ? _passwordConfirmationController.text
+          : null,
+    );
 
     if (!mounted) return;
 
+    String snackBarMessage;
+    if (result['success'] == true) {
+      snackBarMessage = wantsPasswordChange
+          ? 'Password berhasil diupdate'
+          : (result['message'] ?? 'Profil berhasil diupdate');
+    } else {
+      snackBarMessage = result['message'] ?? 'Gagal memperbarui profil';
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(result['message'] ?? 'Profile updated'),
-        backgroundColor:
-            result['success'] == true ? AppColors.success : AppColors.error,
+        content: Text(snackBarMessage),
+        backgroundColor: result['success'] == true
+            ? AppColors.success
+            : AppColors.error,
       ),
     );
 
@@ -129,7 +140,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   validator: (value) {
                     final name = value?.trim() ?? '';
                     if (name.isEmpty) return 'Name is required';
-                    if (name.length < 3) return 'Name must be at least 3 characters';
+                    if (name.length < 3)
+                      return 'Name must be at least 3 characters';
                     return null;
                   },
                 ),
@@ -152,7 +164,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       decoration: _passwordDecoration(
                         'Current Password',
                         _obscureCurrent,
-                        () => setState(() => _obscureCurrent = !_obscureCurrent),
+                        () =>
+                            setState(() => _obscureCurrent = !_obscureCurrent),
                       ),
                     ),
                     const SizedBox(height: 12),

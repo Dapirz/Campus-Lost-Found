@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../config/app_colors.dart';
+import '../../config/api_config.dart'; // Ditambahkan untuk lokalisasi pesan
 import '../../models/notification_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/notification_provider.dart';
@@ -88,7 +89,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   onRefresh: _loadNotifications,
                   child: ListView(
                     children: [
-                      SizedBox(height: MediaQuery.of(context).size.height * 0.25),
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.25,
+                      ),
                       Icon(
                         Icons.notifications_none,
                         size: 64,
@@ -159,13 +162,15 @@ class NotificationTile extends StatelessWidget {
           child: Icon(config.icon, color: config.color),
         ),
         title: Text(
-          notification.message,
+          // Terjemahkan pesan notifikasi dari Bahasa Indonesia ke Bahasa Inggris secara dinamis
+          ApiConfig.translate(notification.message),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
             fontSize: 14,
-            fontWeight:
-                notification.isRead ? FontWeight.normal : FontWeight.bold,
+            fontWeight: notification.isRead
+                ? FontWeight.normal
+                : FontWeight.bold,
             color: AppColors.textDark,
           ),
         ),
@@ -190,9 +195,10 @@ class NotificationTile extends StatelessWidget {
           if (notification.isRead) return;
           final token = context.read<AuthProvider>().token;
           if (token == null) return;
-          await context
-              .read<NotificationProvider>()
-              .markAsRead(notification.id, token);
+          await context.read<NotificationProvider>().markAsRead(
+            notification.id,
+            token,
+          );
         },
       ),
     );
@@ -201,20 +207,20 @@ class NotificationTile extends StatelessWidget {
   ({Color bg, Color color, IconData icon}) _iconConfig(String type) {
     return switch (type) {
       'report_verified' => (
-          bg: const Color(0xFFDBEAFE),
-          color: const Color(0xFF1E40AF),
-          icon: Icons.verified,
-        ),
+        bg: const Color(0xFFDBEAFE),
+        color: const Color(0xFF1E40AF),
+        icon: Icons.verified,
+      ),
       'report_rejected' => (
-          bg: const Color(0xFFFEE2E2),
-          color: const Color(0xFF991B1B),
-          icon: Icons.cancel,
-        ),
+        bg: const Color(0xFFFEE2E2),
+        color: const Color(0xFF991B1B),
+        icon: Icons.cancel,
+      ),
       _ => (
-          bg: const Color(0xFFF3E8FF),
-          color: const Color(0xFF7C3AED),
-          icon: Icons.notifications,
-        ),
+        bg: const Color(0xFFF3E8FF),
+        color: const Color(0xFF7C3AED),
+        icon: Icons.notifications,
+      ),
     };
   }
 }

@@ -327,7 +327,9 @@ class MyReportCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: const Color(0xFFFEF2F2),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFFCA5A5).withValues(alpha: 0.5)),
+              border: Border.all(
+                color: const Color(0xFFFCA5A5).withValues(alpha: 0.5),
+              ),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -363,8 +365,10 @@ class MyReportCard extends StatelessWidget {
                   foregroundColor: AppColors.tertiary,
                   side: const BorderSide(color: AppColors.tertiary),
                   visualDensity: VisualDensity.compact,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                 ),
                 child: const Text(
                   'Mark as Resolved',
@@ -401,9 +405,10 @@ class MyReportCard extends StatelessWidget {
               Navigator.pop(ctx);
               final token = context.read<AuthProvider>().token;
               if (token == null) return;
-              final result = await context
-                  .read<ReportProvider>()
-                  .deleteReport(report.id, token);
+              final result = await context.read<ReportProvider>().deleteReport(
+                report.id,
+                token,
+              );
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -418,7 +423,10 @@ class MyReportCard extends StatelessWidget {
                 ),
               );
             },
-            child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: AppColors.error),
+            ),
           ),
         ],
       ),
@@ -428,42 +436,73 @@ class MyReportCard extends StatelessWidget {
   void _showResolveDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Mark as Resolved?'),
-        content: const Text('This report will be marked as resolved.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              final token = context.read<AuthProvider>().token;
-              if (token == null) return;
-              final result = await context.read<ReportProvider>().resolveReport(
-                    id: report.id,
-                    token: token,
-                  );
-              if (!context.mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(result['message'] ?? 'Report updated'),
-                  backgroundColor: result['success'] == true
-                      ? AppColors.success
-                      : AppColors.error,
+      barrierDismissible: false, // Mencegah penutupan dialog secara tidak sengaja dengan mengetuk bagian luar saat sedang memproses API
+      builder: (ctx) {
+        bool isResolving = false;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: const Text('Mark as Resolved?'),
+              content: const Text('This report will be marked as resolved.'),
+              actions: [
+                TextButton(
+                  onPressed: isResolving ? null : () => Navigator.pop(ctx),
+                  child: const Text('Cancel'),
                 ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.tertiary,
-              foregroundColor: AppColors.white,
-            ),
-            child: const Text('Resolve'),
-          ),
-        ],
-      ),
+                ElevatedButton(
+                  onPressed: isResolving
+                      ? null
+                      : () async {
+                          // Ubah state menjadi sedang memproses untuk menonaktifkan tombol dan menampilkan spinner loading
+                          setState(() {
+                            isResolving = true;
+                          });
+
+                          final token = context.read<AuthProvider>().token;
+                          if (token == null) {
+                            Navigator.pop(ctx);
+                            return;
+                          }
+
+                          final result = await context.read<ReportProvider>().resolveReport(
+                            id: report.id,
+                            token: token,
+                          );
+
+                          if (!ctx.mounted) return;
+                          Navigator.pop(ctx); // Tutup dialog setelah transaksi penyelesaian selesai diproses backend
+
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(result['message'] ?? 'Report updated'),
+                              backgroundColor: result['success'] == true
+                                  ? AppColors.success
+                                  : AppColors.error,
+                            ),
+                          );
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.tertiary,
+                    foregroundColor: AppColors.white,
+                  ),
+                  child: isResolving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.0,
+                            color: AppColors.white,
+                          ),
+                        )
+                      : const Text('Resolve'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -503,30 +542,26 @@ class _StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final config = switch (status) {
       'pending' => (
-          label: 'Pending',
-          bg: const Color(0xFFFEF3C7),
-          color: const Color(0xFF92400E),
-        ),
+        label: 'Pending',
+        bg: const Color(0xFFFEF3C7),
+        color: const Color(0xFF92400E),
+      ),
       'verified' => (
-          label: 'Verified',
-          bg: const Color(0xFFDBEAFE),
-          color: const Color(0xFF1E40AF),
-        ),
+        label: 'Verified',
+        bg: const Color(0xFFDBEAFE),
+        color: const Color(0xFF1E40AF),
+      ),
       'resolved' => (
-          label: 'Resolved',
-          bg: const Color(0xFFD1FAE5),
-          color: const Color(0xFF065F46),
-        ),
+        label: 'Resolved',
+        bg: const Color(0xFFD1FAE5),
+        color: const Color(0xFF065F46),
+      ),
       'rejected' => (
-          label: 'Rejected',
-          bg: const Color(0xFFFEE2E2),
-          color: const Color(0xFF991B1B),
-        ),
-      _ => (
-          label: status,
-          bg: AppColors.neutral,
-          color: AppColors.textMuted,
-        ),
+        label: 'Rejected',
+        bg: const Color(0xFFFEE2E2),
+        color: const Color(0xFF991B1B),
+      ),
+      _ => (label: status, bg: AppColors.neutral, color: AppColors.textMuted),
     };
 
     return Container(
@@ -679,7 +714,10 @@ class _SkeletonCardState extends State<_SkeletonCard>
                             Colors.grey[200]!,
                           ],
                           stops: const [0.15, 0.5, 0.85],
-                          begin: Alignment(-1.0 + (_controller.value * 2.5), -0.2),
+                          begin: Alignment(
+                            -1.0 + (_controller.value * 2.5),
+                            -0.2,
+                          ),
                           end: Alignment(1.0 + (_controller.value * 2.5), 0.2),
                         ),
                       ),
@@ -699,7 +737,10 @@ class _SkeletonCardState extends State<_SkeletonCard>
                             Colors.grey[200]!,
                           ],
                           stops: const [0.15, 0.5, 0.85],
-                          begin: Alignment(-1.0 + (_controller.value * 2.5), -0.2),
+                          begin: Alignment(
+                            -1.0 + (_controller.value * 2.5),
+                            -0.2,
+                          ),
                           end: Alignment(1.0 + (_controller.value * 2.5), 0.2),
                         ),
                       ),
@@ -719,7 +760,10 @@ class _SkeletonCardState extends State<_SkeletonCard>
                             Colors.grey[200]!,
                           ],
                           stops: const [0.15, 0.5, 0.85],
-                          begin: Alignment(-1.0 + (_controller.value * 2.5), -0.2),
+                          begin: Alignment(
+                            -1.0 + (_controller.value * 2.5),
+                            -0.2,
+                          ),
                           end: Alignment(1.0 + (_controller.value * 2.5), 0.2),
                         ),
                       ),
@@ -734,4 +778,3 @@ class _SkeletonCardState extends State<_SkeletonCard>
     );
   }
 }
-

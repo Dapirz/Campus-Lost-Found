@@ -22,10 +22,11 @@ class NotificationService {
         return notificationsJson
             .map((json) => NotificationModel.fromJson(json))
             .toList();
-      } else if (response.statusCode == 401 || response.statusCode == 403) {
+      } else if (ApiConfig.shouldForceLogout(response.statusCode, response.body)) {
+        // Sesi tidak valid atau akun dinonaktifkan oleh admin, lakukan logout paksa
         AuthProvider.instance?.forceLogout();
       }
- 
+
       return <NotificationModel>[];
     } on TimeoutException {
       return <NotificationModel>[];
@@ -43,7 +44,8 @@ class NotificationService {
           )
           .timeout(ApiConfig.timeout);
 
-      if (response.statusCode == 401 || response.statusCode == 403) {
+      if (ApiConfig.shouldForceLogout(response.statusCode, response.body)) {
+        // Sesi tidak valid atau akun dinonaktifkan oleh admin, lakukan logout paksa
         AuthProvider.instance?.forceLogout();
         return false;
       }
@@ -65,7 +67,8 @@ class NotificationService {
           )
           .timeout(ApiConfig.timeout);
 
-      if (response.statusCode == 401 || response.statusCode == 403) {
+      if (ApiConfig.shouldForceLogout(response.statusCode, response.body)) {
+        // Sesi tidak valid atau akun dinonaktifkan oleh admin, lakukan logout paksa
         AuthProvider.instance?.forceLogout();
         return false;
       }

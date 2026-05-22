@@ -68,10 +68,16 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 64, color: AppColors.textMuted),
+              const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: AppColors.textMuted,
+              ),
               const SizedBox(height: 16),
-              const Text('Report not found',
-                  style: TextStyle(fontSize: 16, color: AppColors.textMuted)),
+              const Text(
+                'Report not found',
+                style: TextStyle(fontSize: 16, color: AppColors.textMuted),
+              ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
@@ -98,7 +104,8 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   /// SliverAppBar dengan hero image
   Widget _buildSliverAppBar() {
     final report = _report!;
-    final hasImage = report.images.isNotEmpty ||
+    final hasImage =
+        report.images.isNotEmpty ||
         (report.imageUrl != null && report.imageUrl!.isNotEmpty);
 
     String? heroImageUrl;
@@ -121,7 +128,11 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
             shape: BoxShape.circle,
           ),
           child: IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.white, size: 20),
+            icon: const Icon(
+              Icons.arrow_back,
+              color: AppColors.white,
+              size: 20,
+            ),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -130,9 +141,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         // Badge tipe di atas gambar
         Padding(
           padding: const EdgeInsets.only(right: 12),
-          child: Center(
-            child: _TypeBadgeOverlay(type: report.type),
-          ),
+          child: Center(child: _TypeBadgeOverlay(type: report.type)),
         ),
       ],
       flexibleSpace: FlexibleSpaceBar(
@@ -151,7 +160,8 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                     ),
                   );
                 },
-                errorBuilder: (context, error, stackTrace) => _buildImagePlaceholder(),
+                errorBuilder: (context, error, stackTrace) =>
+                    _buildImagePlaceholder(),
               )
             : _buildImagePlaceholder(),
       ),
@@ -205,8 +215,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
           _buildInfoCard(report),
 
           // Extra gallery jika ada lebih dari 1 foto
-          if (report.images.length > 1)
-            _buildGalleryCard(report),
+          if (report.images.length > 1) _buildGalleryCard(report),
 
           const SizedBox(height: 80), // space untuk bottom button
         ],
@@ -238,7 +247,11 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         // Tanggal
         Row(
           children: [
-            const Icon(Icons.calendar_today, size: 16, color: AppColors.primary),
+            const Icon(
+              Icons.calendar_today,
+              size: 16,
+              color: AppColors.primary,
+            ),
             const SizedBox(width: 8),
             Text(
               '${report.type == 'found' ? 'Found' : 'Lost'} ${_formatDate(report.incidentDate)}',
@@ -251,12 +264,19 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         // Lokasi
         Row(
           children: [
-            const Icon(Icons.location_on_outlined, size: 16, color: AppColors.primary),
+            const Icon(
+              Icons.location_on_outlined,
+              size: 16,
+              color: AppColors.primary,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 report.locationText,
-                style: const TextStyle(fontSize: 14, color: AppColors.secondary),
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.secondary,
+                ),
               ),
             ),
           ],
@@ -287,7 +307,11 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         children: [
           const Row(
             children: [
-              Icon(Icons.description_outlined, size: 18, color: AppColors.primary),
+              Icon(
+                Icons.description_outlined,
+                size: 18,
+                color: AppColors.primary,
+              ),
               SizedBox(width: 8),
               Text(
                 'Item Description',
@@ -409,11 +433,17 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          _infoRow(Icons.calendar_today, 'Incident Date', _formatDate(report.incidentDate)),
+          _infoRow(
+            Icons.calendar_today,
+            'Incident Date',
+            _formatDate(report.incidentDate),
+          ),
           const SizedBox(height: 12),
-          _infoRow(Icons.access_time, 'Reported', _formatDateTime(report.createdAt)),
-          const SizedBox(height: 12),
-          _infoRow(Icons.person_outline, 'Reporter', report.reporter.name),
+          _infoRow(
+            Icons.access_time,
+            'Reported',
+            _formatDateTime(report.createdAt),
+          ),
         ],
       ),
     );
@@ -428,12 +458,22 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label,
-                  style: const TextStyle(fontSize: 12, color: AppColors.textMuted)),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textMuted,
+                ),
+              ),
               const SizedBox(height: 2),
-              Text(value,
-                  style: const TextStyle(
-                      fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textDark)),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textDark,
+                ),
+              ),
             ],
           ),
         ),
@@ -478,7 +518,9 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
               itemBuilder: (context, index) {
                 return Container(
                   width: 100,
-                  margin: EdgeInsets.only(right: index < report.images.length - 1 ? 8 : 0),
+                  margin: EdgeInsets.only(
+                    right: index < report.images.length - 1 ? 8 : 0,
+                  ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(10),
                     child: Image.network(
@@ -486,7 +528,10 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Container(
                         color: AppColors.neutral,
-                        child: const Icon(Icons.broken_image, color: AppColors.textMuted),
+                        child: const Icon(
+                          Icons.broken_image,
+                          color: AppColors.textMuted,
+                        ),
                       ),
                     ),
                   ),
@@ -505,7 +550,8 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     if (report == null) return null;
 
     final authProvider = context.watch<AuthProvider>();
-    final isOwner = authProvider.isLoggedIn &&
+    final isOwner =
+        authProvider.isLoggedIn &&
         authProvider.user != null &&
         authProvider.user!.id == report.reporter.id;
     final canResolve = isOwner && report.status == 'verified';
@@ -535,7 +581,9 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: AppColors.white),
+                      strokeWidth: 2,
+                      color: AppColors.white,
+                    ),
                   )
                 : const Icon(Icons.check_circle_outline, size: 20),
             label: Text(_isResolving ? 'Processing...' : 'Mark as Resolved'),
@@ -562,39 +610,69 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Mark Report as Resolved?'),
-        content: Text(
-          isLost
-              ? 'Confirm that your item has been found.'
-              : 'Confirm that the item has been returned to its owner.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _resolveReport();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.tertiary,
-              foregroundColor: AppColors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+      barrierDismissible: false, // Mencegah penutupan dialog secara tidak sengaja dengan mengetuk bagian luar saat sedang memproses API
+      builder: (ctx) {
+        bool dialogResolving = false;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: const Text('Mark Report as Resolved?'),
+              content: Text(
+                isLost
+                    ? 'Confirm that your item has been found.'
+                    : 'Confirm that the item has been returned to its owner.',
               ),
-            ),
-            child: const Text('Yes, Resolve'),
-          ),
-        ],
-      ),
+              actions: [
+                TextButton(
+                  onPressed: dialogResolving ? null : () => Navigator.pop(ctx),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: AppColors.textMuted),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: dialogResolving
+                      ? null
+                      : () async {
+                          // Ubah state dialog menjadi sedang memproses untuk menonaktifkan tombol dan menampilkan spinner loading
+                          setState(() {
+                            dialogResolving = true;
+                          });
+
+                          // Panggil proses utama penyelesaian laporan dengan mengirimkan context dialog agar bisa ditutup secara aman
+                          await _resolveReport(ctx);
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.tertiary,
+                    foregroundColor: AppColors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: dialogResolving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.white,
+                          ),
+                        )
+                      : const Text('Yes, Resolve'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
-  Future<void> _resolveReport() async {
+  Future<void> _resolveReport(BuildContext dialogCtx) async {
+    // Pengaman awal untuk mencegah pemanggilan ganda jika proses resolve sedang berlangsung
+    if (_isResolving) return;
+
     final authProvider = context.read<AuthProvider>();
     final reportProvider = context.read<ReportProvider>();
     final token = authProvider.token;
@@ -611,22 +689,37 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
       setState(() => _isResolving = false);
 
       if (result['success'] == true) {
+        // Tutup dialog secara aman terlebih dahulu sebelum berpindah halaman
+        if (dialogCtx.mounted) {
+          Navigator.pop(dialogCtx);
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Report has been marked as resolved!'),
+            content: Text(result['message'] ?? 'Report has been marked as resolved!'),
             backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
         );
+        // Kembali ke halaman sebelumnya setelah berhasil menyelesaikan laporan
         Navigator.pop(context);
       } else {
+        // Tutup dialog secara aman jika terjadi kegagalan transaksi
+        if (dialogCtx.mounted) {
+          Navigator.pop(dialogCtx);
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['message'] ?? 'Failed'),
+            content: Text(result['message'] ?? 'Failed to resolve report'),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
         );
       }
@@ -641,7 +734,9 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFFEF2F2),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFCA5A5).withValues(alpha: 0.4)),
+        border: Border.all(
+          color: const Color(0xFFFCA5A5).withValues(alpha: 0.4),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
@@ -703,7 +798,11 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         children: [
           const Row(
             children: [
-              Icon(Icons.speaker_notes_outlined, size: 18, color: AppColors.primary),
+              Icon(
+                Icons.speaker_notes_outlined,
+                size: 18,
+                color: AppColors.primary,
+              ),
               SizedBox(width: 8),
               Text(
                 'Admin Notes',
@@ -743,8 +842,19 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     try {
       final date = DateTime.parse(dateStr);
       const months = [
-        '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        '',
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
       ];
       return '${months[date.month]} ${date.day}, ${date.year}';
     } catch (_) {
@@ -756,8 +866,19 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     try {
       final date = DateTime.parse(dateStr);
       const months = [
-        '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        '',
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
       ];
       return '${date.day} ${months[date.month]} ${date.year}';
     } catch (_) {
@@ -820,15 +941,35 @@ class _StatusBadge extends StatelessWidget {
   Map<String, dynamic> _getConfig() {
     switch (status) {
       case 'pending':
-        return {'bg': const Color(0xFFFEF3C7), 'text': const Color(0xFF92400E), 'label': 'Pending'};
+        return {
+          'bg': const Color(0xFFFEF3C7),
+          'text': const Color(0xFF92400E),
+          'label': 'Pending',
+        };
       case 'verified':
-        return {'bg': const Color(0xFFDBEAFE), 'text': const Color(0xFF1E40AF), 'label': 'Verified'};
+        return {
+          'bg': const Color(0xFFDBEAFE),
+          'text': const Color(0xFF1E40AF),
+          'label': 'Verified',
+        };
       case 'resolved':
-        return {'bg': const Color(0xFFD1FAE5), 'text': const Color(0xFF065F46), 'label': 'Resolved'};
+        return {
+          'bg': const Color(0xFFD1FAE5),
+          'text': const Color(0xFF065F46),
+          'label': 'Resolved',
+        };
       case 'rejected':
-        return {'bg': const Color(0xFFFEE2E2), 'text': const Color(0xFF991B1B), 'label': 'Rejected'};
+        return {
+          'bg': const Color(0xFFFEE2E2),
+          'text': const Color(0xFF991B1B),
+          'label': 'Rejected',
+        };
       default:
-        return {'bg': AppColors.neutral, 'text': AppColors.textMuted, 'label': status};
+        return {
+          'bg': AppColors.neutral,
+          'text': AppColors.textMuted,
+          'label': status,
+        };
     }
   }
 }
