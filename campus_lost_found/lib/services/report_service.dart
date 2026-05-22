@@ -17,9 +17,7 @@ class ReportService {
   }) async {
     try {
       // Build query parameters
-      final queryParams = <String, String>{
-        'page': page.toString(),
-      };
+      final queryParams = <String, String>{'page': page.toString()};
       if (type != null && type.isNotEmpty) {
         queryParams['type'] = type;
       }
@@ -27,8 +25,9 @@ class ReportService {
         queryParams['search'] = search.trim();
       }
 
-      final uri = Uri.parse('${ApiConfig.baseUrl}/reports')
-          .replace(queryParameters: queryParams);
+      final uri = Uri.parse(
+        '${ApiConfig.baseUrl}/reports',
+      ).replace(queryParameters: queryParams);
 
       final response = await http
           .get(uri, headers: ApiConfig.headers())
@@ -115,13 +114,12 @@ class ReportService {
 
       if (response.statusCode == 200 && data['success'] == true) {
         final List<dynamic> reportsJson = data['data'] ?? [];
-        return reportsJson
-            .map((json) => ReportModel.fromJson(json))
-            .toList();
-      } else if (response.statusCode == 401 || response.statusCode == 403) {
+        return reportsJson.map((json) => ReportModel.fromJson(json)).toList();
+      } else if (ApiConfig.shouldForceLogout(response.statusCode, response.body)) {
+        // Sesi tidak valid atau akun dinonaktifkan oleh admin, lakukan logout paksa
         AuthProvider.instance?.forceLogout();
       }
-      
+
       return <ReportModel>[];
     } on TimeoutException {
       return <ReportModel>[];
@@ -173,35 +171,40 @@ class ReportService {
       if (response.statusCode == 201 && data['success'] == true) {
         return {
           'success': true,
-          'message': data['message'] ?? 'Report submitted successfully',
+          'message': ApiConfig.translate(data['message'] ?? 'Report submitted successfully'),
         };
-      } else if (response.statusCode == 401 || response.statusCode == 403) {
+      } else if (ApiConfig.shouldForceLogout(response.statusCode, response.body)) {
+        // Sesi tidak valid atau akun dinonaktifkan oleh admin, lakukan logout paksa
         AuthProvider.instance?.forceLogout();
         return {
           'success': false,
-          'message': data['message'] ?? 'Sesi Anda telah berakhir atau akun dinonaktifkan.',
+          'message': ApiConfig.translate(
+              data['message'] ??
+              'Your session has expired or your account has been deactivated.'),
         };
       } else if (response.statusCode == 422) {
         return {
           'success': false,
-          'message': data['message'] ?? 'Validation failed',
+          'message': ApiConfig.translate(data['message'] ?? 'Validation failed'),
           'errors': data['errors'],
         };
       } else {
         return {
           'success': false,
-          'message': data['message'] ?? 'Failed to submit report',
+          'message': ApiConfig.translate(data['message'] ?? 'Failed to submit report'),
         };
       }
     } on TimeoutException {
       return {
         'success': false,
-        'message': 'Connection timeout. Please make sure the server is running.',
+        'message':
+            'Connection timeout. Please make sure the server is running.',
       };
     } catch (e) {
       return {
         'success': false,
-        'message': 'Failed to connect to server. Please check your internet connection.',
+        'message':
+            'Failed to connect to server. Please check your internet connection.',
       };
     }
   }
@@ -219,24 +222,19 @@ class ReportService {
 
       final data = jsonDecode(response.body);
 
-      if (response.statusCode == 401 || response.statusCode == 403) {
+      if (ApiConfig.shouldForceLogout(response.statusCode, response.body)) {
+        // Sesi tidak valid atau akun dinonaktifkan oleh admin, lakukan logout paksa
         AuthProvider.instance?.forceLogout();
       }
 
       return {
         'success': response.statusCode == 200 && data['success'] == true,
-        'message': data['message'] ?? 'Failed to delete report',
+        'message': ApiConfig.translate(data['message'] ?? 'Failed to delete report'),
       };
     } on TimeoutException {
-      return {
-        'success': false,
-        'message': 'Connection timeout.',
-      };
+      return {'success': false, 'message': 'Connection timeout.'};
     } catch (e) {
-      return {
-        'success': false,
-        'message': 'Failed to connect to server.',
-      };
+      return {'success': false, 'message': 'Failed to connect to server.'};
     }
   }
 
@@ -264,30 +262,27 @@ class ReportService {
       if (response.statusCode == 200 && data['success'] == true) {
         return {
           'success': true,
-          'message': data['message'] ?? 'Report marked as resolved',
+          'message': ApiConfig.translate(data['message'] ?? 'Report marked as resolved'),
         };
-      } else if (response.statusCode == 401 || response.statusCode == 403) {
+      } else if (ApiConfig.shouldForceLogout(response.statusCode, response.body)) {
+        // Sesi tidak valid atau akun dinonaktifkan oleh admin, lakukan logout paksa
         AuthProvider.instance?.forceLogout();
         return {
           'success': false,
-          'message': data['message'] ?? 'Sesi Anda telah berakhir atau akun dinonaktifkan.',
+          'message': ApiConfig.translate(
+              data['message'] ??
+              'Your session has expired or your account has been deactivated.'),
         };
       } else {
         return {
           'success': false,
-          'message': data['message'] ?? 'Failed to resolve report',
+          'message': ApiConfig.translate(data['message'] ?? 'Failed to resolve report'),
         };
       }
     } on TimeoutException {
-      return {
-        'success': false,
-        'message': 'Connection timeout.',
-      };
+      return {'success': false, 'message': 'Connection timeout.'};
     } catch (e) {
-      return {
-        'success': false,
-        'message': 'An error occurred.',
-      };
+      return {'success': false, 'message': 'An error occurred.'};
     }
   }
 }

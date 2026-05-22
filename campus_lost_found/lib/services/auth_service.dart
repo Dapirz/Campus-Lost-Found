@@ -25,21 +25,21 @@ class AuthService {
           'success': true,
           'token': data['data']['token'],
           'user': UserModel.fromJson(data['data']['user']),
-          'message': data['message'] ?? 'Login successful',
+          'message': ApiConfig.translate(data['message'] ?? 'Login successful'),
         };
       } else if (response.statusCode == 403) {
         return {
           'success': false,
           'token': null,
           'user': null,
-          'message': data['message'] ?? 'Your account has been deactivated.',
+          'message': ApiConfig.translate(data['message'] ?? 'Your account has been deactivated.'),
         };
       } else {
         return {
           'success': false,
           'token': null,
           'user': null,
-          'message': 'Invalid email or password',
+          'message': ApiConfig.translate(data['message'] ?? 'Invalid email or password'),
         };
       }
     } on TimeoutException {
@@ -88,20 +88,20 @@ class AuthService {
       if (response.statusCode == 201 && data['success'] == true) {
         return {
           'success': true,
-          'message': data['message'] ?? 'Registration successful',
+          'message': ApiConfig.translate(data['message'] ?? 'Registration successful'),
           'errors': null,
         };
       } else if (response.statusCode == 422) {
-        // Validation errors dari Laravel
+        // Kesalahan validasi dari Laravel
         return {
           'success': false,
-          'message': data['message'] ?? 'Validation failed',
+          'message': ApiConfig.translate(data['message'] ?? 'Validation failed'),
           'errors': data['errors'],
         };
       } else {
         return {
           'success': false,
-          'message': data['message'] ?? 'Registration failed',
+          'message': ApiConfig.translate(data['message'] ?? 'Registration failed'),
           'errors': null,
         };
       }
@@ -155,7 +155,8 @@ class AuthService {
         if (data['success'] == true) {
           return UserModel.fromJson(data['data']);
         }
-      } else if (response.statusCode == 401 || response.statusCode == 403) {
+      } else if (ApiConfig.shouldForceLogout(response.statusCode, response.body)) {
+        // Sesi tidak valid atau akun dinonaktifkan oleh admin, lakukan logout paksa
         AuthProvider.instance?.forceLogout();
       }
       return null;
@@ -179,10 +180,10 @@ class AuthService {
             Uri.parse('${ApiConfig.baseUrl}/user/profile'),
             headers: ApiConfig.headers(token: token),
             body: jsonEncode({
-              'name': ?name,
-              'current_password': ?currentPassword,
-              'password': ?password,
-              'password_confirmation': ?passwordConfirmation,
+              if (name != null) 'name': name,
+              if (currentPassword != null) 'current_password': currentPassword,
+              if (password != null) 'password': password,
+              if (passwordConfirmation != null) 'password_confirmation': passwordConfirmation,
             }),
           )
           .timeout(ApiConfig.timeout);
@@ -192,21 +193,24 @@ class AuthService {
       if (response.statusCode == 200 && data['success'] == true) {
         return {
           'success': true,
-          'message': data['message'] ?? 'Profile updated successfully',
+          'message': ApiConfig.translate(data['message'] ?? 'Profile updated successfully'),
           'errors': null,
         };
-      } else if (response.statusCode == 401 || response.statusCode == 403) {
+      } else if (ApiConfig.shouldForceLogout(response.statusCode, response.body)) {
+        // Sesi tidak valid atau akun dinonaktifkan oleh admin, lakukan logout paksa
         AuthProvider.instance?.forceLogout();
         return {
           'success': false,
-          'message': data['message'] ?? 'Sesi Anda telah berakhir atau akun dinonaktifkan.',
+          'message': ApiConfig.translate(
+              data['message'] ??
+              'Your session has expired or your account has been deactivated.'),
           'errors': null,
         };
       }
 
       return {
         'success': false,
-        'message': data['message'] ?? 'Failed to update profile',
+        'message': ApiConfig.translate(data['message'] ?? 'Failed to update profile'),
         'errors': data['errors'],
       };
     } on TimeoutException {

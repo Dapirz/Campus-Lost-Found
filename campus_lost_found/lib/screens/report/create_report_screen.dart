@@ -418,8 +418,9 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
               'Any unique marks, brands, or contents that help identify it...',
             ),
             validator: (v) {
-              if (v == null || v.trim().isEmpty)
+              if (v == null || v.trim().isEmpty) {
                 return 'Description is required';
+              }
               if (v.trim().length < 10) return 'Minimum 10 characters';
               return null;
             },
@@ -656,7 +657,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Report submitted successfully! ✓',
+                  'Report submitted successfully!',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
                 SizedBox(height: 2),

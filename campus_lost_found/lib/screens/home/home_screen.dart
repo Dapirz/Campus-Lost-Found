@@ -61,17 +61,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   void _refreshTab(int index) {
     if (!mounted) return;
+
+    // Always fetch notifications in background when switching or refreshing any tab
+    // to keep the unread badge on bottom nav bar updated!
+    final token = context.read<AuthProvider>().token;
+    if (token != null) {
+      context.read<NotificationProvider>().loadNotifications(token);
+    }
+
     if (index == 0) {
       context.read<ReportProvider>().loadReports(refresh: true);
     } else if (index == 1) {
-      final token = context.read<AuthProvider>().token;
       if (token != null) {
         context.read<ReportProvider>().loadMyReports(token);
-      }
-    } else if (index == 3) {
-      final token = context.read<AuthProvider>().token;
-      if (token != null) {
-        context.read<NotificationProvider>().loadNotifications(token);
       }
     }
   }
@@ -357,7 +359,15 @@ class _HomeFeedBody extends StatelessWidget {
           },
           child: RefreshIndicator(
             color: AppColors.primary,
-            onRefresh: () => provider.loadReports(refresh: true),
+            onRefresh: () async {
+              await provider.loadReports(refresh: true);
+              if (context.mounted) {
+                final token = context.read<AuthProvider>().token;
+                if (token != null) {
+                  await context.read<NotificationProvider>().loadNotifications(token);
+                }
+              }
+            },
             child: ListView.builder(
               controller: scrollController,
               padding: const EdgeInsets.symmetric(horizontal: 16),
