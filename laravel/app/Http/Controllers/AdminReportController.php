@@ -77,12 +77,25 @@ class AdminReportController extends Controller
                 'status' => 'verified',
             ]);
 
+            $message = 'Your report "'.$report->title.'" has been verified and published.';
+
             Notification::query()->create([
                 'user_id' => $report->user_id,
                 'type' => 'report_verified',
-                'message' => 'Your report "'.$report->title.'" has been verified and published.',
+                'message' => $message,
                 'is_read' => false,
             ]);
+
+            // Send Push Notification
+            if ($report->user && $report->user->fcm_token) {
+                $fcmService = app(\App\Services\FcmService::class);
+                $fcmService->sendToToken(
+                    $report->user->fcm_token,
+                    'Report Verified',
+                    $message,
+                    ['report_id' => (string) $report->id, 'type' => 'report_verified']
+                );
+            }
         });
 
         return redirect()
@@ -124,6 +137,17 @@ class AdminReportController extends Controller
                 'message' => $message,
                 'is_read' => false,
             ]);
+            
+            // Send Push Notification
+            if ($report->user && $report->user->fcm_token) {
+                $fcmService = app(\App\Services\FcmService::class);
+                $fcmService->sendToToken(
+                    $report->user->fcm_token,
+                    'Report Rejected',
+                    $message,
+                    ['report_id' => (string) $report->id, 'type' => 'report_rejected']
+                );
+            }
         });
 
         return redirect()

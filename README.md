@@ -181,7 +181,14 @@ php artisan serve
 
 > The backend will run at `http://127.0.0.1:8000`
 
-### 3. Setup Flutter Mobile App
+### 3. Setup Firebase Cloud Messaging (FCM)
+Aplikasi ini menggunakan Firebase untuk push notifications.
+1. **Frontend (Flutter)**: Konfigurasi `google-services.json` sudah ada di dalam repository (`campus_lost_found/android/app/google-services.json`).
+2. **Backend (Laravel)**: Server membutuhkan Service Account JSON file agar memiliki hak akses mengirim notifikasi dari Laravel.
+   - Buat file `firebase-credentials.json` di dalam folder `laravel/storage/app/` (File ini di-ignore oleh Git demi keamanan).
+   - Pastikan path di `.env` sudah benar: `FIREBASE_CREDENTIALS_PATH="D:/ProjectABP/Campus-Lost-Found/laravel/storage/app/firebase-credentials.json"` atau sesuaikan dengan path di PC masing-masing.
+
+### 4. Setup Flutter Mobile App
 
 ```bash
 cd campus_lost_found

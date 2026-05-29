@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
+import '../services/fcm_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
@@ -54,6 +55,9 @@ class AuthProvider extends ChangeNotifier {
           _user = user;
           _token = savedToken;
           _isLoggedIn = true;
+          
+          // Kirim FCM token ke backend saat inisialisasi awal
+          FcmService.instance.sendTokenToServer();
         } else {
           // Token sudah expired atau tidak valid
           await prefs.remove('auth_token');
@@ -85,6 +89,9 @@ class AuthProvider extends ChangeNotifier {
         // Simpan token ke SharedPreferences
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('auth_token', _token!);
+        
+        // Panggil untuk mengirim FCM token ke backend karena user sudah login
+        FcmService.instance.sendTokenToServer();
       }
 
       return result;
