@@ -193,10 +193,10 @@ class AuthService {
             Uri.parse('${ApiConfig.baseUrl}/user/profile'),
             headers: ApiConfig.headers(token: token),
             body: jsonEncode({
-              'name': ?name,
-              'current_password': ?currentPassword,
-              'password': ?password,
-              'password_confirmation': ?passwordConfirmation,
+              if (name != null) 'name': name,
+              if (currentPassword != null) 'current_password': currentPassword,
+              if (password != null) 'password': password,
+              if (passwordConfirmation != null) 'password_confirmation': passwordConfirmation,
             }),
           )
           .timeout(ApiConfig.timeout);
