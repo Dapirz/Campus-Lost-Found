@@ -1,6 +1,6 @@
 class ApiConfig {
-  // static const String baseUrl = 'http://10.0.2.2:8000/api'; // Emulator
-  static const String baseUrl = 'http://[IP_ADDRESS]/api'; // mobile
+  //static const String baseUrl = 'http://10.0.2.2:8000/api'; // Emulator
+  static const String baseUrl = 'http://10.21.222.49:8000/api'; // mobile
 
   static const Duration timeout = Duration(seconds: 15);
 
