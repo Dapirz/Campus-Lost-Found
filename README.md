@@ -2,8 +2,8 @@
 
 A full-stack **Lost & Found** management system for university campuses. Built with **Laravel** (Backend API + Admin Panel) and **Flutter** (Mobile App).
 
-> **Tugas Besar — Aplikasi Berbasis Platform**  
-> Telkom University © 2026 — Kelompok 1 JOSSJISS
+> **Course Project — Platform-Based Application Development**  
+> Telkom University © 2026 — Group 1 JOSSJISS
 
 ---
 
@@ -48,7 +48,7 @@ Campus Lost & Found is a platform that helps students and staff report lost or f
 - 📸 Create report with image upload
 - 📄 Detailed report view with image gallery
 - 📋 My Reports — track personal submissions by status
-- 👤 Profile — stats, edit profile, change password (localized in English)
+- 👤 Profile — stats, edit profile, change password (fully localized in English)
 - 📬 Inbox — in-app notifications with read/unread states (automatically translated from backend)
 - 🔐 Authentication (Login/Register) with token persistence
 - ✅ Mark reports as resolved
@@ -190,11 +190,11 @@ php artisan serve
 > The backend will run at `http://127.0.0.1:8000`
 
 ### 3. Setup Firebase Cloud Messaging (FCM)
-Aplikasi ini menggunakan Firebase untuk push notifications.
-1. **Frontend (Flutter)**: Konfigurasi `google-services.json` sudah ada di dalam repository (`campus_lost_found/android/app/google-services.json`).
-2. **Backend (Laravel)**: Server membutuhkan Service Account JSON file agar memiliki hak akses mengirim notifikasi dari Laravel.
-   - Buat file `firebase-credentials.json` di dalam folder `laravel/storage/app/` (File ini di-ignore oleh Git demi keamanan).
-   - Pastikan path di `.env` sudah benar: `FIREBASE_CREDENTIALS_PATH="D:/ProjectABP/Campus-Lost-Found/laravel/storage/app/firebase-credentials.json"` atau sesuaikan dengan path di PC masing-masing.
+This application uses Firebase for push notifications.
+1. **Frontend (Flutter)**: The `google-services.json` configuration is already included in the repository (`campus_lost_found/android/app/google-services.json`).
+2. **Backend (Laravel)**: The server requires a Service Account JSON file to have access rights to send notifications from Laravel.
+   - Create a `firebase-credentials.json` file inside the `laravel/storage/app/` directory (This file is ignored by Git for security reasons).
+   - Ensure the path in `.env` is correct: `FIREBASE_CREDENTIALS_PATH="D:/ProjectABP/Campus-Lost-Found/laravel/storage/app/firebase-credentials.json"` or adjust it to your own PC path.
 
 ### 4. Setup Flutter Mobile App
 
@@ -268,9 +268,9 @@ After running `php artisan migrate --seed`, the following accounts are available
 
 ## Team
 
-**Kelompok 1 — JOSSJISS**
+**Group 1 — JOSSJISS**
 
-Telkom University — Aplikasi Berbasis Platform 2026
+Telkom University — Platform-Based Application Development 2026
 
 ---
 
