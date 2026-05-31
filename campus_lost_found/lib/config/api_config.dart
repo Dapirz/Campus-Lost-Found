@@ -1,8 +1,6 @@
 class ApiConfig {
-  // Gunakan 'http://10.0.2.2:8000/api' untuk Android Emulator
-  // Gunakan 'http://[IP_ADDRESS_LAPTOP]:8000/api' untuk physical device dengan wifi yang sama
-  // Gunakan 'http://127.0.0.1:8000/api' jika menggunakan kabel (adb reverse tcp:8000 tcp:8000)
-  static const String baseUrl = 'http://127.0.0.1:8000/api';
+  // static const String baseUrl = 'http://10.0.2.2:8000/api'; // Emulator
+  static const String baseUrl = 'http://[IP_ADDRESS]/api'; // mobile
 
   static const Duration timeout = Duration(seconds: 15);
 
@@ -47,6 +45,47 @@ class ApiConfig {
       return 'Your report "$title" has been verified.';
     }
 
+    // Pola ekspresi reguler untuk menerjemahkan notifikasi persetujuan klaim secara dinamis
+    final claimApprovedRegex = RegExp(
+      r'^Klaim Anda untuk "(.+)" telah disetujui! Silakan ambil barang Anda di Pos Satpam Utama dengan kode klaim: (.+)$',
+    );
+    if (claimApprovedRegex.hasMatch(message)) {
+      final match = claimApprovedRegex.firstMatch(message);
+      final title = match?.group(1) ?? '';
+      final code = match?.group(2) ?? '';
+      return 'Your claim for "$title" has been approved! Please collect your item at the Main Security Post with claim code: $code';
+    }
+
+    // Pola ekspresi reguler untuk menerjemahkan notifikasi penitipan barang penemu secara dinamis
+    final handoverPendingRegex = RegExp(
+      r'^Laporan "(.+)" Anda telah disetujui untuk diserahkan ke pemiliknya\. Mohon titipkan/serahkan barang tersebut ke Pos Satpam Utama\.$',
+    );
+    if (handoverPendingRegex.hasMatch(message)) {
+      final match = handoverPendingRegex.firstMatch(message);
+      final title = match?.group(1) ?? '';
+      return 'Your report "$title" has been approved to be returned to its owner. Please hand over the item to the Main Security Post.';
+    }
+
+    // Pola ekspresi reguler untuk menerjemahkan notifikasi penolakan klaim secara dinamis
+    final claimRejectedRegex = RegExp(
+      r'^Klaim Anda untuk "(.+)" ditolak karena bukti kepemilikan kurang kuat\.$',
+    );
+    if (claimRejectedRegex.hasMatch(message)) {
+      final match = claimRejectedRegex.firstMatch(message);
+      final title = match?.group(1) ?? '';
+      return 'Your claim for "$title" has been rejected because the proof of ownership is insufficient.';
+    }
+
+    // Pola ekspresi reguler untuk menerjemahkan notifikasi serah-terima klaim berhasil secara dinamis
+    final claimReceivedRegex = RegExp(
+      r'^Laporan "(.+)" Anda telah berhasil diambil oleh pemiliknya yang sah\.$',
+    );
+    if (claimReceivedRegex.hasMatch(message)) {
+      final match = claimReceivedRegex.firstMatch(message);
+      final title = match?.group(1) ?? '';
+      return 'Your report "$title" has been successfully retrieved by its rightful owner.';
+    }
+
     // Kamus statis untuk menerjemahkan pesan sukses/gagal dari API controller
     const translations = {
       'Validasi gagal': 'Validation failed',
@@ -68,6 +107,17 @@ class ApiConfig {
           'Your account has been deactivated by the Admin. Please contact support for further information.',
       'Login berhasil': 'Login successful',
       'Logout berhasil': 'Logout successful',
+      'Anda tidak bisa mengklaim laporan Anda sendiri':
+          'You cannot claim your own report',
+      'Anda sudah mengajukan klaim untuk laporan ini':
+          'You have already submitted a claim for this report',
+      'Pengajuan klaim berhasil dikirim, silakan tunggu verifikasi admin':
+          'Claim request submitted successfully, please await admin verification',
+      'Pengajuan klaim tidak ditemukan': 'Claim request not found',
+      'Status klaim tidak valid untuk dikonfirmasi':
+          'Invalid claim status for confirmation',
+      'Konfirmasi terima barang berhasil, laporan kini ditandai selesai':
+          'Handover confirmation successful, report marked as resolved',
     };
 
     // Cari kecocokan langsung di dalam kamus translasi

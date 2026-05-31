@@ -108,6 +108,17 @@ class FcmService {
     }
   }
 
+  Future<void> sendTokenToServer() async {
+    try {
+      String? fcmToken = await _firebaseMessaging.getToken();
+      if (fcmToken != null) {
+        _sendTokenToServer(fcmToken);
+      }
+    } catch (e) {
+      print('Error getting/sending FCM token: $e');
+    }
+  }
+
   void _sendTokenToServer(String fcmToken) async {
     final token = AuthProvider.instance?.token;
     if (token != null) {

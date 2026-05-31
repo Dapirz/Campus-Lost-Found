@@ -31,6 +31,10 @@ Route::prefix('admin')->group(function () {
         Route::patch('/reports/{id}/verify', [AdminReportController::class, 'verify'])->name('admin.reports.verify');
         Route::patch('/reports/{id}/reject', [AdminReportController::class, 'reject'])->name('admin.reports.reject');
         Route::delete('/reports/{id}', [AdminReportController::class, 'destroy'])->name('admin.reports.destroy');
+
+        // Admin Claims Approval / Rejection
+        Route::patch('/claims/{id}/approve', [AdminReportController::class, 'approveClaim'])->name('admin.claims.approve');
+        Route::patch('/claims/{id}/reject', [AdminReportController::class, 'rejectClaim'])->name('admin.claims.reject');
         Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
         Route::patch('/users/{id}/toggle', [AdminUserController::class, 'toggle'])->name('admin.users.toggle');
         Route::delete('/users/{id}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');

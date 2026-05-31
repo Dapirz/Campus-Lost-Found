@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/report_model.dart';
 import '../services/report_service.dart';
+import '../providers/auth_provider.dart';
 
 class ReportProvider extends ChangeNotifier {
   final ReportService _reportService = ReportService();
@@ -39,10 +40,14 @@ class ReportProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // Ambil token aktif dari AuthProvider agar backend Laravel dapat memfilter data dengan benar.
+      final String? token = AuthProvider.instance?.token;
+
       final result = await _reportService.getReports(
         type: _activeTab == 'all' ? null : _activeTab,
         search: _searchQuery.isEmpty ? null : _searchQuery,
         page: _currentPage,
+        token: token,
       );
 
       if (result['success'] == true) {

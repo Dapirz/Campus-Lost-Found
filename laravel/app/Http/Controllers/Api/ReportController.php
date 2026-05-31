@@ -21,7 +21,22 @@ class ReportController extends Controller
     {
         $reports = Report::query()
             ->with(['user:id,name', 'reportImages'])
-            ->where('status', 'verified')
+            ->where(function ($query) {
+                // Tampilkan laporan yang terverifikasi (untuk semua user)
+                $query->where('status', 'verified');
+                
+                // ATAU tampilkan laporan berstatus collection_pending KHUSUS untuk user yang klaimnya disetujui
+                $user = auth('sanctum')->user();
+                if ($user) {
+                    $query->orWhere(function ($sub) use ($user) {
+                        $sub->where('status', 'collection_pending')
+                            ->whereHas('claims', function ($claimQuery) use ($user) {
+                                $claimQuery->where('user_id', $user->id)
+                                           ->where('status', 'approved');
+                            });
+                    });
+                }
+            })
             ->when($request->string('type')->value(), function ($query, string $type) {
                 $query->where('type', $type);
             })
@@ -72,6 +87,24 @@ class ReportController extends Controller
             ], 404);
         }
 
+        // Cari apakah ada klaim aktif oleh user yang sedang login
+        $activeClaim = null;
+        $user = auth('sanctum')->user();
+        if ($user) {
+            $claim = \App\Models\Claim::query()
+                ->where('report_id', $report->id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if ($claim) {
+                $activeClaim = [
+                    'id'         => $claim->id,
+                    'status'     => $claim->status,
+                    'claim_code' => $claim->claim_code,
+                ];
+            }
+        }
+
         return response()->json([
             'success' => true,
             'data'    => [
@@ -91,6 +124,7 @@ class ReportController extends Controller
                     'url' => $img->image_url,
                 ]),
                 'reporter'   => $report->user ? ['id' => $report->user->id, 'name' => $report->user->name] : null,
+                'active_claim' => $activeClaim,
                 'created_at' => $report->created_at->toIso8601String(),
             ],
         ]);

@@ -14,6 +14,7 @@ class ReportService {
     String? type,
     String? search,
     int page = 1,
+    String? token,
   }) async {
     try {
       // Build query parameters
@@ -29,8 +30,9 @@ class ReportService {
         '${ApiConfig.baseUrl}/reports',
       ).replace(queryParameters: queryParams);
 
+      // Kirim header otorisasi jika token tersedia agar backend Laravel dapat memfilter barang collection_pending milik user aktif.
       final response = await http
-          .get(uri, headers: ApiConfig.headers())
+          .get(uri, headers: ApiConfig.headers(token: token ?? AuthProvider.instance?.token))
           .timeout(ApiConfig.timeout);
 
       final data = jsonDecode(response.body);
@@ -77,12 +79,13 @@ class ReportService {
   /// GET /reports/{id}
   /// Fetch single report detail.
   /// Returns ReportModel or null on failure.
-  Future<ReportModel?> getReportDetail(int id) async {
+  Future<ReportModel?> getReportDetail(int id, {String? token}) async {
     try {
       final response = await http
           .get(
             Uri.parse('${ApiConfig.baseUrl}/reports/$id'),
-            headers: ApiConfig.headers(),
+            // Kirim token aktif dari AuthProvider agar backend Laravel tahu siapa user yang mengakses detail laporan ini untuk menyertakan data active_claim.
+            headers: ApiConfig.headers(token: token ?? AuthProvider.instance?.token),
           )
           .timeout(ApiConfig.timeout);
 
@@ -277,6 +280,108 @@ class ReportService {
         return {
           'success': false,
           'message': ApiConfig.translate(data['message'] ?? 'Failed to resolve report'),
+        };
+      }
+    } on TimeoutException {
+      return {'success': false, 'message': 'Connection timeout.'};
+    } catch (e) {
+      return {'success': false, 'message': 'An error occurred.'};
+    }
+  }
+
+  /// POST /reports/{id}/claim
+  /// Kirim pengajuan klaim barang temuan ke backend Laravel (mendukung unggah foto bukti).
+  Future<Map<String, dynamic>> submitClaim({
+    required int reportId,
+    required String description,
+    File? image,
+    required String token,
+  }) async {
+    try {
+      final uri = Uri.parse('${ApiConfig.baseUrl}/reports/$reportId/claim');
+      final request = http.MultipartRequest('POST', uri);
+
+      // Header keamanan
+      request.headers['Authorization'] = 'Bearer $token';
+      request.headers['Accept'] = 'application/json';
+
+      // Bidang formulir
+      request.fields['proof_description'] = description;
+
+      // Lampirkan gambar bukti jika ada
+      if (image != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('proof_image', image.path),
+        );
+      }
+
+      final streamedResponse = await request.send().timeout(
+        const Duration(seconds: 30),
+      );
+      final response = await http.Response.fromStream(streamedResponse);
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 201 && data['success'] == true) {
+        return {
+          'success': true,
+          'message': ApiConfig.translate(data['message'] ?? 'Claim submitted successfully'),
+        };
+      } else if (ApiConfig.shouldForceLogout(response.statusCode, response.body)) {
+        // Sesi tidak valid atau akun dinonaktifkan oleh admin, lakukan logout paksa
+        AuthProvider.instance?.forceLogout();
+        return {
+          'success': false,
+          'message': ApiConfig.translate(
+              data['message'] ??
+              'Your session has expired or your account has been deactivated.'),
+        };
+      } else {
+        return {
+          'success': false,
+          'message': ApiConfig.translate(data['message'] ?? 'Failed to submit claim'),
+        };
+      }
+    } on TimeoutException {
+      return {'success': false, 'message': 'Connection timeout.'};
+    } catch (e) {
+      return {'success': false, 'message': 'An error occurred.'};
+    }
+  }
+
+  /// PATCH /claims/{claim_id}/confirm
+  /// Konfirmasi serah-terima fisik secara mandiri oleh pemilik di depan satpam (Self-Service).
+  Future<Map<String, dynamic>> confirmCollection({
+    required int claimId,
+    required String token,
+  }) async {
+    try {
+      final response = await http
+          .patch(
+            Uri.parse('${ApiConfig.baseUrl}/claims/$claimId/confirm'),
+            headers: ApiConfig.headers(token: token),
+          )
+          .timeout(ApiConfig.timeout);
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return {
+          'success': true,
+          'message': ApiConfig.translate(data['message'] ?? 'Collection confirmed successfully'),
+        };
+      } else if (ApiConfig.shouldForceLogout(response.statusCode, response.body)) {
+        // Sesi tidak valid atau akun dinonaktifkan oleh admin, lakukan logout paksa
+        AuthProvider.instance?.forceLogout();
+        return {
+          'success': false,
+          'message': ApiConfig.translate(
+              data['message'] ??
+              'Your session has expired or your account has been deactivated.'),
+        };
+      } else {
+        return {
+          'success': false,
+          'message': ApiConfig.translate(data['message'] ?? 'Failed to confirm collection'),
         };
       }
     } on TimeoutException {

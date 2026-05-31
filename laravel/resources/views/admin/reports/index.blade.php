@@ -80,6 +80,7 @@
                         <option value="">All Statuses</option>
                         <option value="pending" @selected(request('status') === 'pending')>Pending</option>
                         <option value="verified" @selected(request('status') === 'verified')>Verified</option>
+                        <option value="collection_pending" @selected(request('status') === 'collection_pending')>Collection Pending</option>
                         <option value="resolved" @selected(request('status') === 'resolved')>Resolved</option>
                         <option value="rejected" @selected(request('status') === 'rejected')>Rejected</option>
                     </select>
@@ -115,12 +116,12 @@
                                 @php
                                     $imageUrl = $report->image_url;
                                     $photoSrc = null;
-
+ 
                                     if ($imageUrl) {
-                                        // Fix for emulator URLs so images show correctly in web admin
-                                        $imageUrl = str_replace('http://10.0.2.2:8000', url('/'), $imageUrl);
-                                        
-                                        if (\Illuminate\Support\Str::startsWith($imageUrl, ['http://', 'https://', '/storage/'])) {
+                                        // Ekstrak path setelah '/storage/' agar selalu menunjuk ke storage lokal admin
+                                        if (preg_match('/\/storage\/(.+)$/', $imageUrl, $matches)) {
+                                            $photoSrc = asset('storage/' . $matches[1]);
+                                        } elseif (\Illuminate\Support\Str::startsWith($imageUrl, ['http://', 'https://', '/storage/'])) {
                                             $photoSrc = \Illuminate\Support\Str::startsWith($imageUrl, '/storage/')
                                                 ? asset(ltrim($imageUrl, '/'))
                                                 : $imageUrl;
@@ -137,7 +138,16 @@
                                         'verified' => 'badge-verified',
                                         'resolved' => 'badge-resolved',
                                         'rejected' => 'badge-rejected',
+                                        'collection_pending' => 'bg-warning text-dark',
                                         default => 'badge-pending',
+                                    };
+                                    $statusLabel = match ($report->status) {
+                                        'collection_pending' => 'Collection Pending',
+                                        'verified' => 'Verified',
+                                        'resolved' => 'Resolved',
+                                        'rejected' => 'Rejected',
+                                        'pending' => 'Pending',
+                                        default => ucfirst($report->status),
                                     };
                                 @endphp
                                 <tr>
@@ -181,13 +191,18 @@
                                         <a href="{{ route('admin.reports.show', $report->id) }}" class="table-title-link">
                                             {{ $report->title }}
                                         </a>
+                                        @if ($report->claims->where('status', 'pending')->count() > 0)
+                                            <span class="badge bg-warning text-dark ms-1 shadow-sm fw-bold" style="font-size: 10px; padding: 4px 8px; border-radius: 6px; border: 1px solid #FCD34D;">
+                                                Claim Request ({{ $report->claims->where('status', 'pending')->count() }})
+                                            </span>
+                                        @endif
                                     </td>
                                     <td>
                                         <span class="badge {{ $typeBadgeClass }}">{{ $typeLabel }}</span>
                                     </td>
                                     <td>{{ $report->user?->name ?? '-' }}</td>
                                     <td>
-                                        <span class="badge {{ $statusBadgeClass }}">{{ ucfirst($report->status) }}</span>
+                                        <span class="badge {{ $statusBadgeClass }}">{{ $statusLabel }}</span>
                                     </td>
                                     <td>{{ $report->created_at?->format('d M Y H:i') ?? '-' }}</td>
                                     <td class="text-center">
@@ -218,15 +233,15 @@
                                                     >&#10005;</button>
                                                 </form>
                                             @endif
-                                            <form
-                                                action="{{ route('admin.reports.destroy', $report->id) }}"
-                                                method="POST"
-                                                onsubmit="return confirm('Are you sure you want to delete this report?');"
-                                            >
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="icon-action-btn delete" title="Delete">&#128465;</button>
-                                            </form>
+                                            <button 
+                                                type="button" 
+                                                class="icon-action-btn delete btn-delete-report" 
+                                                data-action="{{ route('admin.reports.destroy', $report->id) }}"
+                                                data-title="{{ $report->title }}"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deleteReportModal"
+                                                title="Delete"
+                                            >&#128465;</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -273,6 +288,34 @@
         </div>
     </div>
 
+    <!-- Delete Report Modal -->
+    <div class="modal fade reject-modal" id="deleteReportModal" tabindex="-1" aria-labelledby="deleteReportModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteReportModalLabel">Delete Report</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="reject-copy mb-3 text-dark">
+                        Are you sure you want to delete report <strong id="deleteReportTitleText"></strong>?
+                    </p>
+                    <div class="alert alert-danger border-0 small mb-0 rounded-3 text-dark" style="background-color: #FEE2E2; border: 1px solid #FCA5A5;">
+                        <strong>Warning:</strong> This action is permanent and all report data along with associated photos will be deleted forever from the server.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form id="deleteReportForm" method="POST" action="">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         (() => {
             const modalElement = document.getElementById('rejectReportModal');
@@ -309,5 +352,20 @@
                 reasonInput.value = '';
             });
         })();
+
+        // Handler Modal Delete Report
+        document.addEventListener('DOMContentLoaded', () => {
+            const deleteReportModal = document.getElementById('deleteReportModal');
+            if (deleteReportModal) {
+                deleteReportModal.addEventListener('show.bs.modal', (event) => {
+                    const button = event.relatedTarget;
+                    const action = button.getAttribute('data-action');
+                    const title = button.getAttribute('data-title');
+                    
+                    deleteReportModal.querySelector('#deleteReportForm').setAttribute('action', action);
+                    deleteReportModal.querySelector('#deleteReportTitleText').textContent = title;
+                });
+            }
+        });
     </script>
 @endsection

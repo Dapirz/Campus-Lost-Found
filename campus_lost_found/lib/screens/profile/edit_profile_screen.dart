@@ -61,10 +61,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     String snackBarMessage;
     if (result['success'] == true) {
       snackBarMessage = wantsPasswordChange
-          ? 'Password berhasil diupdate'
-          : (result['message'] ?? 'Profil berhasil diupdate');
+          ? 'Password successfully updated'
+          : (result['message'] ?? 'Profile successfully updated');
     } else {
-      snackBarMessage = result['message'] ?? 'Gagal memperbarui profil';
+      snackBarMessage = result['message'] ?? 'Failed to update profile';
     }
 
     ScaffoldMessenger.of(context).showSnackBar(

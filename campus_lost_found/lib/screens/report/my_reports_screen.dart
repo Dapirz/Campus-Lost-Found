@@ -551,6 +551,11 @@ class _StatusBadge extends StatelessWidget {
         bg: const Color(0xFFDBEAFE),
         color: const Color(0xFF1E40AF),
       ),
+      'collection_pending' => (
+        label: 'Collection Pending',
+        bg: const Color(0xFFFEF3C7),
+        color: const Color(0xFFD97706),
+      ),
       'resolved' => (
         label: 'Resolved',
         bg: const Color(0xFFD1FAE5),
