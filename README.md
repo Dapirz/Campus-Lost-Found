@@ -25,8 +25,8 @@ A full-stack **Lost & Found** management system for university campuses. Built w
 
 Campus Lost & Found is a platform that helps students and staff report lost or found items on campus. The system consists of:
 
-- **Admin Panel (Web)** — For administrators to manage reports, verify/reject submissions, and manage user accounts.
-- **Mobile App (Flutter)** — For students to browse reports, submit lost/found items, track their reports, and receive notifications.
+- **Admin Panel (Web)** — For administrators to manage reports, verify/reject submissions, review ownership claims, generate claim codes, and manage user accounts.
+- **Mobile App (Flutter)** — For students to browse reports, submit lost/found items, claim items by submitting ownership proofs, track their active claims with real-time status cards, receive notifications, and confirm receipt of items.
 
 ---
 
@@ -39,6 +39,8 @@ Campus Lost & Found is a platform that helps students and staff report lost or f
 - 👥 User management (activate/deactivate, delete)
 - 🔐 Admin authentication
 - 🖼️ Image preview for report submissions
+- 🚨 **Claim Verification System** — Beautiful dialog modals to review claimant's proof and approve/reject claims, complete with a dynamic pending claims counter badge.
+- 🔑 **Claim Code Generator** — Automatically generates a secure 6-digit Claim Code (e.g. `LF-XXXXXX`) and changes the report status to `Collection Pending` upon approval, hiding it from the public feed.
 
 ### 📱 Mobile App (Flutter)
 
@@ -46,10 +48,13 @@ Campus Lost & Found is a platform that helps students and staff report lost or f
 - 📸 Create report with image upload
 - 📄 Detailed report view with image gallery
 - 📋 My Reports — track personal submissions by status
-- 👤 Profile — stats, edit profile, change password
-- 📬 Inbox — in-app notifications with read/unread states
+- 👤 Profile — stats, edit profile, change password (localized in English)
+- 📬 Inbox — in-app notifications with read/unread states (automatically translated from backend)
 - 🔐 Authentication (Login/Register) with token persistence
 - ✅ Mark reports as resolved
+- 🛡️ **Secure Claim Process** — Submit ownership description and supporting photo proofs (optional) to request a claim.
+- 🎨 **HSL Status Cards** — Informative, visually premium color-coded cards for active claims (Yellow for Pending, Red for Rejected, Green for Approved containing the large Claim Code, and Forest Green for Received).
+- 🤝 **Self-Service Physical Handover** — Present the Claim Code to campus security (Satpam) and click the click-locked "Confirm I Received the Item" button to resolve the process physically and digitally.
 
 ---
 
@@ -89,14 +94,17 @@ Campus-Lost-Found/
 │   │   │   │   ├── AuthController.php
 │   │   │   │   ├── ReportController.php
 │   │   │   │   ├── NotificationController.php
-│   │   │   │   └── UserProfileController.php
+│   │   │   │   ├── UserProfileController.php
+│   │   │   │   └── ClaimController.php     # Handles mobile claims and handover
 │   │   │   ├── AdminAuthController.php
 │   │   │   ├── AdminDashboardController.php
-│   │   │   ├── AdminReportController.php
+│   │   │   ├── AdminReportController.php   # Handles claim verification & status
 │   │   │   └── AdminUserController.php
 │   │   └── Models/
+│   │       ├── Claim.php       # Claim Eloquent Model
+│   │       └── Report.php
 │   ├── database/
-│   │   ├── migrations/
+│   │   ├── migrations/         # Includes create_claims_table migration
 │   │   └── seeders/
 │   ├── resources/views/admin/  # Blade templates
 │   ├── routes/
@@ -106,15 +114,15 @@ Campus-Lost-Found/
 │
 └── campus_lost_found/          # Flutter Mobile App
     └── lib/
-        ├── config/             # API config, color palette
-        ├── models/             # Data models
+        ├── config/             # API config, color palette, translation engine
+        ├── models/             # Data models (including ReportActiveClaimModel)
         ├── providers/          # State management (Provider)
-        ├── services/           # API service layer
+        ├── services/           # API service layer (with auto token injection)
         ├── screens/
         │   ├── auth/           # Login, Register
         │   ├── home/           # Home feed
-        │   ├── report/         # Report detail, create, my reports
-        │   ├── profile/        # Profile, edit profile
+        │   ├── report/         # Report detail, create, my reports, claim dialog
+        │   ├── profile/        # Profile, edit profile (fully localized)
         │   └── notification/   # Inbox
         └── widgets/            # Reusable components
 ```
@@ -236,8 +244,8 @@ After running `php artisan migrate --seed`, the following accounts are available
 |--------|----------|-------------|
 | `POST` | `/api/auth/register` | Register new user |
 | `POST` | `/api/auth/login` | Login & get token |
-| `GET` | `/api/reports` | List verified reports |
-| `GET` | `/api/reports/{id}` | Report detail |
+| `GET` | `/api/reports` | List verified reports (supports authorized user filtering) |
+| `GET` | `/api/reports/{id}` | Report detail (supports authorized user claims parsing) |
 
 ### Protected (Bearer Token Required)
 
@@ -253,6 +261,8 @@ After running `php artisan migrate --seed`, the following accounts are available
 | `PUT` | `/api/user/profile` | Update profile |
 | `GET` | `/api/notifications` | Get notifications |
 | `PATCH` | `/api/notifications/{id}/read` | Mark notification as read |
+| `POST` | `/api/reports/{id}/claim` | Submit ownership claim request (multipart file proof support) |
+| `PATCH` | `/api/claims/{id}/confirm` | Confirm physical receipt of claim (self-service handover) |
 
 ---
 
