@@ -1,3 +1,24 @@
+import '../config/api_config.dart';
+
+/// Memperbaiki host URL gambar secara dinamis agar sesuai dengan koneksi aktif.
+/// Seluruh komentar dalam berkas ini ditulis dalam Bahasa Indonesia.
+String _fixImageUrl(String? url) {
+  if (url == null || url.isEmpty) return '';
+  try {
+    // Dapatkan authority aktif dari ApiConfig.baseUrl
+    final baseUri = Uri.parse(ApiConfig.baseUrl);
+    final activeAuthority = '${baseUri.scheme}://${baseUri.host}:${baseUri.port}';
+    
+    // Parsing URL gambar yang dikirim oleh backend
+    final imageUri = Uri.parse(url);
+    
+    // Satukan kembali menggunakan authority aktif agar selalu sinkron
+    return '$activeAuthority${imageUri.path}';
+  } catch (_) {
+    return url ?? '';
+  }
+}
+
 /// Model gambar laporan (dari detail endpoint).
 class ReportImageModel {
   final int id;
@@ -9,12 +30,10 @@ class ReportImageModel {
   });
 
   factory ReportImageModel.fromJson(Map<String, dynamic> json) {
-    String imageUrl = json['url'] ?? '';
-    // Fix URL: ganti 127.0.0.1 → 10.0.2.2 agar bisa diakses dari emulator
-    if (imageUrl.contains('127.0.0.1')) {
-      imageUrl = imageUrl.replaceAll('127.0.0.1', '10.0.2.2');
-    }
-    return ReportImageModel(id: json['id'] ?? 0, url: imageUrl);
+    return ReportImageModel(
+      id: json['id'] ?? 0,
+      url: _fixImageUrl(json['url']),
+    );
   }
 }
 
@@ -36,6 +55,27 @@ class ReporterModel {
   }
 }
 
+/// Model klaim aktif untuk laporan (dari detail endpoint).
+class ReportActiveClaimModel {
+  final int id;
+  final String status;
+  final String? claimCode;
+
+  ReportActiveClaimModel({
+    required this.id,
+    required this.status,
+    this.claimCode,
+  });
+
+  factory ReportActiveClaimModel.fromJson(Map<String, dynamic> json) {
+    return ReportActiveClaimModel(
+      id: json['id'] ?? 0,
+      status: json['status'] ?? 'pending',
+      claimCode: json['claim_code'],
+    );
+  }
+}
+
 /// Model laporan.
 class ReportModel {
   final int id;
@@ -51,6 +91,7 @@ class ReportModel {
   final ReporterModel reporter;
   final String? rejectionReason;
   final String? adminNotes;
+  final ReportActiveClaimModel? activeClaim; // Klaim aktif dari pengguna yang sedang login
 
   ReportModel({
     required this.id,
@@ -66,16 +107,11 @@ class ReportModel {
     required this.reporter,
     this.rejectionReason,
     this.adminNotes,
+    this.activeClaim,
   });
 
   factory ReportModel.fromJson(Map<String, dynamic> json) {
-    // Fix image URL: ganti 127.0.0.1 → 10.0.2.2 agar bisa diakses dari emulator
-    String? fixedImageUrl = json['image_url'];
-    if (fixedImageUrl != null && fixedImageUrl.contains('127.0.0.1')) {
-      fixedImageUrl = fixedImageUrl.replaceAll('127.0.0.1', '10.0.2.2');
-    }
-
-    // Parse images array (dari detail endpoint)
+    // Parse array gambar (dari detail endpoint)
     List<ReportImageModel> imagesList = [];
     if (json['images'] != null && json['images'] is List) {
       imagesList = (json['images'] as List)
@@ -92,13 +128,16 @@ class ReportModel {
       status: json['status'] ?? 'pending',
       incidentDate: json['incident_date'] ?? '',
       createdAt: json['created_at'] ?? '',
-      imageUrl: fixedImageUrl,
+      imageUrl: _fixImageUrl(json['image_url']),
       images: imagesList,
       reporter: json['reporter'] != null
           ? ReporterModel.fromJson(json['reporter'])
           : ReporterModel(id: 0, name: 'Unknown'),
       rejectionReason: json['rejection_reason'],
       adminNotes: json['admin_notes'],
+      activeClaim: json['active_claim'] != null
+          ? ReportActiveClaimModel.fromJson(json['active_claim'])
+          : null,
     );
   }
 }

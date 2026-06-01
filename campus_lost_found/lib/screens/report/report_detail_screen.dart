@@ -5,6 +5,7 @@ import '../../models/report_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/report_provider.dart';
 import '../../services/report_service.dart';
+import 'claim_report_dialog.dart';
 
 class ReportDetailScreen extends StatefulWidget {
   final int reportId;
@@ -104,8 +105,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   /// SliverAppBar dengan hero image
   Widget _buildSliverAppBar() {
     final report = _report!;
-    final hasImage =
-        report.images.isNotEmpty ||
+    final hasImage = report.images.isNotEmpty ||
         (report.imageUrl != null && report.imageUrl!.isNotEmpty);
 
     String? heroImageUrl;
@@ -146,22 +146,26 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
       ],
       flexibleSpace: FlexibleSpaceBar(
         background: hasImage && heroImageUrl != null
-            ? Image.network(
-                heroImageUrl,
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Container(
-                    color: AppColors.neutral,
-                    child: const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.primary,
+            ? GestureDetector(
+                // Ketika diketuk, panggil fungsi untuk menampilkan foto layar penuh
+                onTap: () => _showFullscreenImage(context, heroImageUrl!),
+                child: Image.network(
+                  heroImageUrl,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Container(
+                      color: AppColors.neutral,
+                      child: const Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.primary,
+                        ),
                       ),
-                    ),
-                  );
-                },
-                errorBuilder: (context, error, stackTrace) =>
-                    _buildImagePlaceholder(),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) =>
+                      _buildImagePlaceholder(),
+                ),
               )
             : _buildImagePlaceholder(),
       ),
@@ -189,6 +193,12 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
           // Judul + Tanggal + Lokasi
           _buildTitleSection(report),
           const SizedBox(height: 12),
+
+          // Card Status Klaim Pengguna (jika ada klaim aktif)
+          if (report.activeClaim != null) ...[
+            _buildClaimStatusCard(report),
+            const SizedBox(height: 12),
+          ],
 
           // Card Alasan Penolakan
           if (report.status == 'rejected' &&
@@ -516,21 +526,26 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
               scrollDirection: Axis.horizontal,
               itemCount: report.images.length,
               itemBuilder: (context, index) {
-                return Container(
-                  width: 100,
-                  margin: EdgeInsets.only(
-                    right: index < report.images.length - 1 ? 8 : 0,
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.network(
-                      report.images[index].url,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        color: AppColors.neutral,
-                        child: const Icon(
-                          Icons.broken_image,
-                          color: AppColors.textMuted,
+                final imageUrl = report.images[index].url;
+                return GestureDetector(
+                  // Ketuk untuk memperbesar foto galeri
+                  onTap: () => _showFullscreenImage(context, imageUrl),
+                  child: Container(
+                    width: 100,
+                    margin: EdgeInsets.only(
+                      right: index < report.images.length - 1 ? 8 : 0,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: AppColors.neutral,
+                          child: const Icon(
+                            Icons.broken_image,
+                            color: AppColors.textMuted,
+                          ),
                         ),
                       ),
                     ),
@@ -544,64 +559,463 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     );
   }
 
-  /// Tombol bawah: Tandai Selesai (kondisional)
+  /// Tombol bawah: Tindai Selesai atau Klaim Barang (kondisional)
   Widget? _buildBottomButton() {
     final report = _report;
     if (report == null) return null;
 
     final authProvider = context.watch<AuthProvider>();
-    final isOwner =
-        authProvider.isLoggedIn &&
-        authProvider.user != null &&
-        authProvider.user!.id == report.reporter.id;
-    final canResolve = isOwner && report.status == 'verified';
 
-    if (!canResolve) return null;
+    // Cek apakah pengguna sudah login
+    if (!authProvider.isLoggedIn || authProvider.user == null) {
+      return null;
+    }
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: ElevatedButton.icon(
-            onPressed: _isResolving ? null : _showResolveDialog,
-            icon: _isResolving
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.white,
-                    ),
-                  )
-                : const Icon(Icons.check_circle_outline, size: 20),
-            label: Text(_isResolving ? 'Processing...' : 'Mark as Resolved'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.tertiary,
-              foregroundColor: AppColors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              textStyle: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+    final isOwner = authProvider.user!.id == report.reporter.id;
+
+    // Jika pemilik laporan (pelapor asli) dan statusnya verified, tampilkan tombol selesaikan laporan
+    if (isOwner) {
+      final canResolve = report.status == 'verified';
+      if (!canResolve) return null;
+
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: _isResolving ? null : _showResolveDialog,
+              icon: _isResolving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.white,
+                      ),
+                    )
+                  : const Icon(Icons.check_circle_outline, size: 20),
+              label: Text(_isResolving ? 'Processing...' : 'Mark as Resolved'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.tertiary,
+                foregroundColor: AppColors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
         ),
+      );
+    }
+
+    // Jika BUKAN pemilik laporan (calon pengambil/penemu barang lain)
+    // Tampilkan tombol Klaim Barang jika belum ada klaim aktif dan laporan verified
+    if (report.status == 'verified' && report.activeClaim == null) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: () => _openClaimDialog(authProvider.token!),
+              icon: const Icon(Icons.security, size: 20),
+              label: const Text('Claim Item (Contact Admin)'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Jika ada klaim aktif dengan status 'approved', tampilkan tombol konfirmasi pengambilan
+    if (report.activeClaim != null &&
+        report.activeClaim!.status == 'approved') {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: _isResolving
+                  ? null
+                  : () => _confirmPhysicalCollection(authProvider.token!),
+              icon: _isResolving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.white,
+                      ),
+                    )
+                  : const Icon(Icons.handshake, size: 20),
+              label: Text(
+                  _isResolving ? 'Processing...' : 'Confirm I Received the Item'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.tertiary,
+                foregroundColor: AppColors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return null;
+  }
+
+  /// Membuat kartu informasi status klaim aktif untuk calon penerima barang.
+  Widget _buildClaimStatusCard(ReportModel report) {
+    final claim = report.activeClaim!;
+
+    if (claim.status == 'pending') {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFFBEB), // Kuning muda
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFFDE68A)),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.hourglass_empty, color: Color(0xFFD97706), size: 24),
+            SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Claim Pending Verification',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF92400E),
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Your proof of ownership is currently being reviewed by the Admin. Please await further notification.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFFB45309),
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (claim.status == 'approved') {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFECFDF5), // Hijau muda
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFA7F3D0)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.check_circle_outline,
+                    color: Color(0xFF059669), size: 24),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Claim Approved by Admin!',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF065F46),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Please meet the security guard (Satpam) at the nearest post and show the following claim code to retrieve your item:',
+              style: TextStyle(
+                fontSize: 12,
+                color: Color(0xFF047857),
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD1FAE5),
+                  borderRadius: BorderRadius.circular(12),
+                  border:
+                      Border.all(color: const Color(0xFF34D399), width: 1.5),
+                ),
+                child: Text(
+                  claim.claimCode ?? 'NO CODE',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 2,
+                    color: Color(0xFF065F46),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (claim.status == 'rejected') {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFEF2F2), // Merah muda
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFFCA5A5)),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.cancel_outlined, color: Color(0xFFDC2626), size: 24),
+            SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Claim Rejected',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF991B1B),
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Sorry, the proof of ownership you submitted is incorrect or insufficient.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFFB91C1C),
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (claim.status == 'received') {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF0FDF4), // Hijau sangat muda
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFBBF7D0)),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.celebration, color: Color(0xFF16A34A), size: 24),
+            SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Item Successfully Collected!',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF15803D),
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Thank you for using the Campus Lost & Found service.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF166534),
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
+  /// Membuka modal dialog pengajuan klaim barang.
+  Future<void> _openClaimDialog(String token) async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => ClaimReportDialog(
+        reportId: widget.reportId,
+        token: token,
       ),
     );
+
+    if (result == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Claim request successfully submitted to Admin.'),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      );
+      // Muat ulang detail laporan untuk memperbarui state UI
+      _loadDetail();
+    }
+  }
+
+  /// Melakukan konfirmasi serah terima fisik secara mandiri oleh pemilik barang (Opsi 2).
+  Future<void> _confirmPhysicalCollection(String token) async {
+    final claimId = _report?.activeClaim?.id;
+    if (claimId == null) return;
+
+    // Tampilkan dialog konfirmasi terlebih dahulu agar aman dari salah pencet
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Confirm Item Receipt'),
+        content: const Text(
+          'Are you sure you have physically received the item from the security guard (Satpam)? This will permanently resolve the report.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel',
+                style: TextStyle(color: AppColors.textMuted)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.tertiary,
+              foregroundColor: AppColors.white,
+            ),
+            child: const Text('Yes, Received'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => _isResolving = true);
+
+    final result = await _reportService.confirmCollection(
+      claimId: claimId,
+      token: token,
+    );
+
+    if (mounted) {
+      setState(() => _isResolving = false);
+
+      if (result['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ??
+                'Confirmation successful, report status resolved!'),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+        // Muat ulang data terbaru agar UI sinkron
+        _loadDetail();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ??
+                'Failed to confirm handover.'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+      }
+    }
   }
 
   void _showResolveDialog() {
@@ -610,13 +1024,15 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
 
     showDialog(
       context: context,
-      barrierDismissible: false, // Mencegah penutupan dialog secara tidak sengaja dengan mengetuk bagian luar saat sedang memproses API
+      barrierDismissible:
+          false, // Mencegah penutupan dialog secara tidak sengaja dengan mengetuk bagian luar saat sedang memproses API
       builder: (ctx) {
         bool dialogResolving = false;
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
               title: const Text('Mark Report as Resolved?'),
               content: Text(
                 isLost
@@ -696,7 +1112,8 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['message'] ?? 'Report has been marked as resolved!'),
+            content: Text(
+                result['message'] ?? 'Report has been marked as resolved!'),
             backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -885,6 +1302,51 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
       return dateStr;
     }
   }
+
+  /// Menampilkan dialog layar penuh dengan fitur pinch-to-zoom (InteractiveViewer)
+  void _showFullscreenImage(BuildContext context, String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: EdgeInsets.zero,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // InteractiveViewer memungkinkan zoom (cubit layar) dan geser foto
+              InteractiveViewer(
+                minScale: 0.5,
+                maxScale: 4.0,
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.contain,
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
+              ),
+              // Tombol X (tutup) di pojok kanan atas
+              Positioned(
+                top: 40,
+                right: 20,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.close,
+                        color: AppColors.white, size: 24),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
 
 /// Badge tipe overlay (di atas gambar hero)
@@ -951,6 +1413,12 @@ class _StatusBadge extends StatelessWidget {
           'bg': const Color(0xFFDBEAFE),
           'text': const Color(0xFF1E40AF),
           'label': 'Verified',
+        };
+      case 'collection_pending':
+        return {
+          'bg': const Color(0xFFFEF3C7),
+          'text': const Color(0xFFD97706),
+          'label': 'Collection Pending',
         };
       case 'resolved':
         return {

@@ -17,3 +17,6 @@ laravel/storage/app/public/reports/
 
 # Flutter (sudah punya .gitignore sendiri)
 campus_lost_found/.flutter-plugins
+*.json
+campus-lost-n-found-*.json
+

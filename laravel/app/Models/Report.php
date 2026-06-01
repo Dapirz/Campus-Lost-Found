@@ -63,6 +63,11 @@ class Report extends Model
         return $this->hasMany(ReportImage::class);
     }
 
+    public function claims(): HasMany
+    {
+        return $this->hasMany(Claim::class);
+    }
+
     protected function imageUrl(): Attribute
     {
         return Attribute::make(

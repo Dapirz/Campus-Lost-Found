@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ClaimController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\UserProfileController;
@@ -43,6 +44,10 @@ Route::middleware(['auth:sanctum', 'api.active'])->group(function () {
     Route::post('/reports', [ReportController::class, 'store']);
     Route::delete('/reports/{id}', [ReportController::class, 'destroy']);
     Route::patch('/reports/{id}/resolve', [ReportController::class, 'resolve']);
+
+    // Claims
+    Route::post('/reports/{id}/claim', [ClaimController::class, 'store']);
+    Route::patch('/claims/{id}/confirm', [ClaimController::class, 'confirm']);
 
     // User Profile
     Route::get('/user/profile', [UserProfileController::class, 'show']);

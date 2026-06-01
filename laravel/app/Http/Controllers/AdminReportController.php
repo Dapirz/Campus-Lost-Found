@@ -16,7 +16,7 @@ class AdminReportController extends Controller
     public function index(Request $request): View
     {
         $reports = Report::query()
-            ->with(['user', 'reportImages'])
+            ->with(['user', 'reportImages', 'claims:id,report_id,status'])
             ->when($request->string('type')->value(), function ($query, string $type) {
                 $query->where('type', $type);
             })
@@ -41,7 +41,7 @@ class AdminReportController extends Controller
     public function show(int $id): View
     {
         $report = Report::query()
-            ->with(['user', 'reportImages'])
+            ->with(['user', 'reportImages', 'claims.user'])
             ->findOrFail($id);
 
         return view('admin.reports.show', [
@@ -190,5 +190,129 @@ class AdminReportController extends Controller
         }
 
         return ltrim($normalizedPath, '/');
+    }
+
+    /**
+     * Setujui klaim barang temuan.
+     */
+    public function approveClaim(int $id): RedirectResponse
+    {
+        $claim = \App\Models\Claim::query()->with('report.user', 'user')->findOrFail($id);
+        $report = $claim->report;
+
+        if ($claim->status !== 'pending') {
+            return redirect()
+                ->route('admin.reports.show', $report->id)
+                ->with('error', 'Only pending claims can be approved.');
+        }
+
+        DB::transaction(function () use ($claim, $report): void {
+            // Generate 6-digit Claim Code
+            $claimCode = 'LF-' . str_pad(random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
+
+            // 1. Update status klaim & claim_code
+            $claim->update([
+                'status' => 'approved',
+                'claim_code' => $claimCode,
+            ]);
+
+            // 2. Update status laporan ke 'collection_pending'
+            $report->update([
+                'status' => 'collection_pending',
+            ]);
+
+            // 3. Tolak klaim pending lainnya secara otomatis
+            \App\Models\Claim::query()
+                ->where('report_id', $report->id)
+                ->where('id', '!=', $claim->id)
+                ->where('status', 'pending')
+                ->update(['status' => 'rejected']);
+
+            // 4. Kirim notifikasi database dan Firebase ke User B (Claimant)
+            $claimantMsg = 'Klaim Anda untuk "' . $report->title . '" telah disetujui! Silakan ambil barang Anda di Pos Satpam Utama dengan kode klaim: ' . $claimCode;
+            Notification::query()->create([
+                'user_id' => $claim->user_id,
+                'type' => 'claim_approved',
+                'message' => $claimantMsg,
+                'is_read' => false,
+            ]);
+
+            if ($claim->user && $claim->user->fcm_token) {
+                $fcmService = app(\App\Services\FcmService::class);
+                $fcmService->sendToToken(
+                    $claim->user->fcm_token,
+                    'Claim Approved',
+                    $claimantMsg,
+                    ['report_id' => (string) $report->id, 'type' => 'claim_approved', 'claim_code' => $claimCode]
+                );
+            }
+
+            // 5. Kirim notifikasi database dan Firebase ke User A (Reporter / Finder)
+            $reporterMsg = 'Laporan "' . $report->title . '" Anda telah disetujui untuk diserahkan ke pemiliknya. Mohon titipkan/serahkan barang tersebut ke Pos Satpam Utama.';
+            Notification::query()->create([
+                'user_id' => $report->user_id,
+                'type' => 'handover_pending',
+                'message' => $reporterMsg,
+                'is_read' => false,
+            ]);
+
+            if ($report->user && $report->user->fcm_token) {
+                $fcmService = app(\App\Services\FcmService::class);
+                $fcmService->sendToToken(
+                    $report->user->fcm_token,
+                    'Handover Required',
+                    $reporterMsg,
+                    ['report_id' => (string) $report->id, 'type' => 'handover_pending']
+                );
+            }
+        });
+
+        return redirect()
+            ->route('admin.reports.show', $report->id)
+            ->with('success', 'Claim approved successfully.');
+    }
+
+    /**
+     * Tolak klaim barang temuan.
+     */
+    public function rejectClaim(int $id): RedirectResponse
+    {
+        $claim = \App\Models\Claim::query()->with('report', 'user')->findOrFail($id);
+        $report = $claim->report;
+
+        if ($claim->status !== 'pending') {
+            return redirect()
+                ->route('admin.reports.show', $report->id)
+                ->with('error', 'Only pending claims can be rejected.');
+        }
+
+        DB::transaction(function () use ($claim, $report): void {
+            $claim->update([
+                'status' => 'rejected',
+            ]);
+
+            // Kirim notifikasi database dan Firebase ke User B (Claimant)
+            $msg = 'Klaim Anda untuk "' . $report->title . '" ditolak karena bukti kepemilikan kurang kuat.';
+            Notification::query()->create([
+                'user_id' => $claim->user_id,
+                'type' => 'claim_rejected',
+                'message' => $msg,
+                'is_read' => false,
+            ]);
+
+            if ($claim->user && $claim->user->fcm_token) {
+                $fcmService = app(\App\Services\FcmService::class);
+                $fcmService->sendToToken(
+                    $claim->user->fcm_token,
+                    'Claim Rejected',
+                    $msg,
+                    ['report_id' => (string) $report->id, 'type' => 'claim_rejected']
+                );
+            }
+        });
+
+        return redirect()
+            ->route('admin.reports.show', $report->id)
+            ->with('success', 'Claim rejected successfully.');
     }
 }

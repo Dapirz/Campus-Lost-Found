@@ -49,14 +49,23 @@
             'verified' => 'badge-verified',
             'resolved' => 'badge-resolved',
             'rejected' => 'badge-rejected',
+            'collection_pending' => 'bg-warning text-dark',
             default => 'badge-pending',
+        };
+        $statusLabel = match ($report->status) {
+            'collection_pending' => 'Collection Pending',
+            'verified' => 'Verified',
+            'resolved' => 'Resolved',
+            'rejected' => 'Rejected',
+            'pending' => 'Pending',
+            default => ucfirst($report->status),
         };
     @endphp
 
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
         <div class="d-flex flex-wrap gap-2">
             <span class="badge {{ $typeBadgeClass }}">{{ $typeLabel }}</span>
-            <span class="badge {{ $statusBadgeClass }}">{{ ucfirst($report->status) }}</span>
+            <span class="badge {{ $statusBadgeClass }}">{{ $statusLabel }}</span>
         </div>
 
         <div class="d-flex gap-2">
@@ -126,17 +135,17 @@
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body p-4">
                     <h3 class="h5 mb-3">Photo Gallery</h3>
-
+ 
                     @if ($report->reportImages->count() > 0)
                         <div class="row g-3">
                             @foreach ($report->reportImages as $image)
                                 @php
                                     $imageUrl = $image->image_url;
-
-                                    // Fix for emulator URLs so images show correctly in web admin
-                                    $imageUrl = str_replace('http://10.0.2.2:8000', url('/'), $imageUrl);
-
-                                    if (\Illuminate\Support\Str::startsWith($imageUrl, ['http://', 'https://', '/storage/'])) {
+ 
+                                    // Ekstrak path setelah '/storage/' agar selalu menunjuk ke storage lokal admin
+                                    if (preg_match('/\/storage\/(.+)$/', $imageUrl, $matches)) {
+                                        $photoSrc = asset('storage/' . $matches[1]);
+                                    } elseif (\Illuminate\Support\Str::startsWith($imageUrl, ['http://', 'https://', '/storage/'])) {
                                         $photoSrc = \Illuminate\Support\Str::startsWith($imageUrl, '/storage/')
                                             ? asset(ltrim($imageUrl, '/'))
                                             : $imageUrl;
@@ -158,7 +167,7 @@
                                         >
                                     </a>
                                 </div>
-
+ 
                                 <!-- Image Modal -->
                                 <div class="modal fade" id="imageModal{{ $loop->iteration }}" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog modal-dialog-centered modal-xl">
@@ -176,6 +185,107 @@
                         </div>
                     @else
                         <p class="text-muted mb-0">No photos are available for this report.</p>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Claims Submissions Section -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h3 class="h5 mb-3">Claim Submissions ({{ $report->claims->count() }})</h3>
+
+                    @if ($report->claims->count() > 0)
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Claimant</th>
+                                        <th>Proof Description</th>
+                                        <th>Proof Image</th>
+                                        <th>Status</th>
+                                        <th>Code</th>
+                                        <th>Submitted At</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($report->claims as $claim)
+                                        <tr>
+                                            <td>
+                                                <strong>{{ $claim->user->name }}</strong><br>
+                                                <small class="text-muted">{{ $claim->user->email }}</small>
+                                            </td>
+                                            <td>
+                                                <span class="d-inline-block text-truncate" style="max-width: 200px;" title="{{ $claim->proof_description }}">
+                                                    {{ $claim->proof_description }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @if ($claim->proof_image_url)
+                                                    @php
+                                                        // Ekstrak path setelah '/storage/' agar selalu menunjuk ke storage lokal admin
+                                                        if (preg_match('/\/storage\/(.+)$/', $claim->proof_image_url, $matches)) {
+                                                            $proofImg = asset('storage/' . $matches[1]);
+                                                        } else {
+                                                            $proofImg = str_replace('http://10.0.2.2:8000', url('/'), $claim->proof_image_url);
+                                                        }
+                                                    @endphp
+                                                    <a href="{{ $proofImg }}" target="_blank">
+                                                        <img src="{{ $proofImg }}" alt="Proof" class="rounded border" style="width: 50px; height: 50px; object-fit: cover;">
+                                                    </a>
+                                                @else
+                                                    <span class="text-muted small">No photo</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @php
+                                                    $claimBadge = match ($claim->status) {
+                                                        'approved' => 'bg-success text-white',
+                                                        'rejected' => 'bg-danger text-white',
+                                                        'received' => 'bg-info text-dark',
+                                                        default => 'bg-warning text-dark',
+                                                    };
+                                                @endphp
+                                                <span class="badge {{ $claimBadge }}">{{ ucfirst($claim->status) }}</span>
+                                            </td>
+                                            <td>
+                                                <code>{{ $claim->claim_code ?? '-' }}</code>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">{{ $claim->created_at?->format('d M Y H:i') ?? '-' }}</small>
+                                            </td>
+                                            <td>
+                                                @if ($claim->status === 'pending')
+                                                     <div class="d-flex gap-1">
+                                                         <button 
+                                                             type="button" 
+                                                             class="btn btn-sm btn-success btn-approve-claim" 
+                                                             data-action="{{ route('admin.claims.approve', $claim->id) }}"
+                                                             data-claimant="{{ $claim->user->name }}"
+                                                             data-bs-toggle="modal"
+                                                             data-bs-target="#approveClaimModal"
+                                                         >Approve</button>
+                                                         
+                                                         <button 
+                                                             type="button" 
+                                                             class="btn btn-sm btn-outline-danger btn-reject-claim" 
+                                                             data-action="{{ route('admin.claims.reject', $claim->id) }}"
+                                                             data-claimant="{{ $claim->user->name }}"
+                                                             data-bs-toggle="modal"
+                                                             data-bs-target="#rejectClaimModal"
+                                                         >Reject</button>
+                                                     </div>
+                                                @else
+                                                    <span class="text-muted small">-</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <p class="text-muted mb-0">No claims have been submitted for this report.</p>
                     @endif
                 </div>
             </div>
@@ -250,4 +360,87 @@
             })();
         </script>
     @endif
+
+    <!-- Approve Claim Modal -->
+    <div class="modal fade reject-modal" id="approveClaimModal" tabindex="-1" aria-labelledby="approveClaimModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="approveClaimModalLabel">Approve Claim</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="reject-copy mb-3 text-dark">
+                        Approve item claim from <strong id="approveClaimantText"></strong>?
+                    </p>
+                    <div class="alert alert-warning border-0 small mb-0 rounded-3 text-dark" style="background-color: #FEF3C7; border: 1px solid #FCD34D;">
+                        <strong>Important:</strong> The report status will automatically change to <strong>Collection Pending</strong> (hidden from the public feed) and all other pending claims will be automatically rejected.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form id="approveClaimForm" method="POST" action="">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" class="btn btn-success">Approve</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Claim Modal -->
+    <div class="modal fade reject-modal" id="rejectClaimModal" tabindex="-1" aria-labelledby="rejectClaimModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rejectClaimModalLabel">Reject Claim</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="reject-copy mb-0 text-dark">
+                        Reject item claim from <strong id="rejectClaimantText"></strong>?
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form id="rejectClaimForm" method="POST" action="">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" class="btn btn-danger">Reject</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Handler Modal Approve Claim
+            const approveClaimModal = document.getElementById('approveClaimModal');
+            if (approveClaimModal) {
+                approveClaimModal.addEventListener('show.bs.modal', (event) => {
+                    const button = event.relatedTarget;
+                    const action = button.getAttribute('data-action');
+                    const claimant = button.getAttribute('data-claimant');
+                    
+                    approveClaimModal.querySelector('#approveClaimForm').setAttribute('action', action);
+                    approveClaimModal.querySelector('#approveClaimantText').textContent = claimant;
+                });
+            }
+
+            // Handler Modal Reject Claim
+            const rejectClaimModal = document.getElementById('rejectClaimModal');
+            if (rejectClaimModal) {
+                rejectClaimModal.addEventListener('show.bs.modal', (event) => {
+                    const button = event.relatedTarget;
+                    const action = button.getAttribute('data-action');
+                    const claimant = button.getAttribute('data-claimant');
+                    
+                    rejectClaimModal.querySelector('#rejectClaimForm').setAttribute('action', action);
+                    rejectClaimModal.querySelector('#rejectClaimantText').textContent = claimant;
+                });
+            }
+        });
+    </script>
 @endsection
