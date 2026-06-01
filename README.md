@@ -187,14 +187,18 @@ php artisan migrate
 # mysql -u root lostnfound < ../lostnfound.sql
 # (Or import it via phpMyAdmin interface into the 'lostnfound' database)
 
-# Create storage symlink
+# Create storage symlink (Option A - Windows Automatic Helper Script)
+# If you are on Windows, simply double-click the 'setup-storage.bat' helper file in the root directory. 
+# It will automatically request Administrator privileges, clean any broken symlinks, and link the storage folder natively!
+
+# OR Create storage symlink (Option B - Standard Artisan Command)
 php artisan storage:link
 
-# Start the server
+# Start the server (Accessible locally and externally from mobile device)
 php artisan serve --host=0.0.0.0 --port=8000
 ```
 
-> The backend will run at `http://127.0.0.1:8000`
+> The backend will run at `http://127.0.0.1:8000` or your local machine IP address.
 
 ### 3. Setup Firebase Cloud Messaging (FCM)
 
