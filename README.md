@@ -177,20 +177,29 @@ php artisan key:generate
 # Create the database
 mysql -u root -e "CREATE DATABASE IF NOT EXISTS lostnfound"
 
-# Run migrations and seeders
+# Run migrations and seeders (Option A - Standard Seed)
 php artisan migrate --seed
+
+# OR Import the ready-to-use database directly (Option B - SQL Import)
+# 1. Run migrations only to prepare the tables:
+php artisan migrate
+# 2. Import the provided 'lostnfound.sql' file from the root directory via terminal:
+# mysql -u root lostnfound < ../lostnfound.sql
+# (Or import it via phpMyAdmin interface into the 'lostnfound' database)
 
 # Create storage symlink
 php artisan storage:link
 
 # Start the server
-php artisan serve
+php artisan serve --host=0.0.0.0 --port=8000
 ```
 
 > The backend will run at `http://127.0.0.1:8000`
 
 ### 3. Setup Firebase Cloud Messaging (FCM)
+
 This application uses Firebase for push notifications.
+
 1. **Frontend (Flutter)**: The `google-services.json` configuration is already included in the repository (`campus_lost_found/android/app/google-services.json`).
 2. **Backend (Laravel)**: The server requires a Service Account JSON file to have access rights to send notifications from Laravel.
    - Create a `firebase-credentials.json` file inside the `laravel/storage/app/` directory (This file is ignored by Git for security reasons).
