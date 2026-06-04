@@ -62,18 +62,18 @@ class FcmService {
 
     // 5. Dengarkan pesan saat aplikasi berjalan di foreground
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print('Got a message whilst in the foreground!');
-      print('Message data: ${message.data}');
+      debugPrint('Got a message whilst in the foreground!');
+      debugPrint('Message data: ${message.data}');
 
       if (message.notification != null) {
-        print('Message also contained a notification: ${message.notification}');
+        debugPrint('Message also contained a notification: ${message.notification}');
         _showLocalNotification(message, channel);
       }
     });
 
     // 6. Dapatkan token FCM dan simpan ke server
     String? fcmToken = await _firebaseMessaging.getToken();
-    print('FCM Token: $fcmToken');
+    debugPrint('FCM Token: $fcmToken');
     if (fcmToken != null) {
       _sendTokenToServer(fcmToken);
     }
@@ -115,7 +115,7 @@ class FcmService {
         _sendTokenToServer(fcmToken);
       }
     } catch (e) {
-      print('Error getting/sending FCM token: $e');
+      debugPrint('Error getting/sending FCM token: $e');
     }
   }
 
@@ -123,7 +123,7 @@ class FcmService {
     final token = AuthProvider.instance?.token;
     if (token != null) {
       await NotificationService().saveFcmToken(fcmToken, token);
-      print('FCM Token sent to server.');
+      debugPrint('FCM Token sent to server.');
     }
   }
 }

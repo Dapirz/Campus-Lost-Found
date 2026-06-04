@@ -122,15 +122,15 @@ class _ClaimReportDialogState extends State<ClaimReportDialog> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Header Dialog
-                Row(
+                const Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.security,
                       color: AppColors.primary,
                       size: 24,
                     ),
-                    const SizedBox(width: 8),
-                    const Expanded(
+                    SizedBox(width: 8),
+                    Expanded(
                       child: Text(
                         'Claim Item (Contact Admin)',
                         style: TextStyle(

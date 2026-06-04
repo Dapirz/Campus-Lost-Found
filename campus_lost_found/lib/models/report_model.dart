@@ -15,7 +15,7 @@ String _fixImageUrl(String? url) {
     // Satukan kembali menggunakan authority aktif agar selalu sinkron
     return '$activeAuthority${imageUri.path}';
   } catch (_) {
-    return url ?? '';
+    return url;
   }
 }
 
