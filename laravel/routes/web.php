@@ -19,6 +19,14 @@ Route::get('/storage/reports/{filename}', function (string $filename) {
     return response()->file($path);
 });
 
+Route::get('/storage/claims/{filename}', function (string $filename) {
+    $path = storage_path('app/public/claims/' . $filename);
+    if (!file_exists($path)) {
+        abort(404);
+    }
+    return response()->file($path);
+});
+
 Route::prefix('admin')->group(function () {
     Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('admin.login');
     Route::post('/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');

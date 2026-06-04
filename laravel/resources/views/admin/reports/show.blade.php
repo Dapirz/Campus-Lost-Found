@@ -230,8 +230,8 @@
                                                             $proofImg = str_replace('http://10.0.2.2:8000', url('/'), $claim->proof_image_url);
                                                         }
                                                     @endphp
-                                                    <a href="{{ $proofImg }}" target="_blank">
-                                                        <img src="{{ $proofImg }}" alt="Proof" class="rounded border" style="width: 50px; height: 50px; object-fit: cover;">
+                                                    <a href="#!" data-bs-toggle="modal" data-bs-target="#claimProofModal{{ $claim->id }}">
+                                                        <img src="{{ $proofImg }}" alt="Proof" class="rounded border" style="width: 50px; height: 50px; object-fit: cover; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
                                                     </a>
                                                 @else
                                                     <span class="text-muted small">No photo</span>
@@ -280,6 +280,28 @@
                                                 @endif
                                             </td>
                                         </tr>
+
+                                        @if ($claim->proof_image_url)
+                                            @php
+                                                if (preg_match('/\/storage\/(.+)$/', $claim->proof_image_url, $matches)) {
+                                                    $proofModalImg = asset('storage/' . $matches[1]);
+                                                } else {
+                                                    $proofModalImg = str_replace('http://10.0.2.2:8000', url('/'), $claim->proof_image_url);
+                                                }
+                                            @endphp
+                                            <div class="modal fade" id="claimProofModal{{ $claim->id }}" tabindex="-1" aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered modal-xl">
+                                                    <div class="modal-content bg-transparent border-0">
+                                                        <div class="modal-header border-0 pb-0 justify-content-end p-2">
+                                                            <button type="button" class="btn-close bg-white rounded-circle p-2" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body text-center p-0">
+                                                            <img src="{{ $proofModalImg }}" class="img-fluid rounded shadow-lg" style="max-height: 85vh; object-fit: contain;">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endif
                                     @endforeach
                                 </tbody>
                             </table>
