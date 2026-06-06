@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jun 01, 2026 at 12:07 AM
+-- Generation Time: Jun 06, 2026 at 07:32 AM
 -- Server version: 8.4.3
 -- PHP Version: 8.4.12
 
@@ -57,6 +57,7 @@ CREATE TABLE `claims` (
   `user_id` bigint UNSIGNED NOT NULL,
   `proof_description` text COLLATE utf8mb4_unicode_ci NOT NULL,
   `proof_image_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `contact_social` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `status` enum('pending','approved','rejected','received') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
   `claim_code` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
@@ -146,7 +147,8 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (13, '2026_04_10_014011_drop_categories_table_and_columns_v2', 1),
 (14, '2026_04_23_030320_create_personal_access_tokens_table', 1),
 (15, '2026_05_30_000000_create_claims_table', 1),
-(16, '2026_05_30_000001_add_collection_pending_status_to_reports_table', 1);
+(16, '2026_05_30_000001_add_collection_pending_status_to_reports_table', 1),
+(17, '2026_06_06_000001_add_contact_social_to_claims_table', 1);
 
 -- --------------------------------------------------------
 
@@ -207,13 +209,6 @@ CREATE TABLE `personal_access_tokens` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `personal_access_tokens`
---
-
-INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `name`, `token`, `abilities`, `last_used_at`, `expires_at`, `created_at`, `updated_at`) VALUES
-(1, 'App\\Models\\User', 2, 'flutter-app', '5c6d84a663d07a4c504b0b08b8b3fa31132a29786a24ac441536cfcd4cf97a59', '[\"*\"]', '2026-05-31 17:05:39', NULL, '2026-05-31 17:04:18', '2026-05-31 17:05:39');
 
 -- --------------------------------------------------------
 
@@ -298,17 +293,6 @@ CREATE TABLE `sessions` (
   `last_activity` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `sessions`
---
-
-INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('Ad0X41XcGldTVT5Ty3wlNvFCS4NctmRHX2TOUf4a', NULL, '127.0.0.1', 'Dart/3.11 (dart:io)', 'eyJfdG9rZW4iOiJjT0U0MWRvN1hjYzNkbDRWZGxQYXF6RmdZNXByb1Z6OW5MVVM3Q0NkIiwiX3ByZXZpb3VzIjp7InVybCI6Imh0dHA6XC9cLzEwLjAuMi4yOjgwMDBcL3N0b3JhZ2VcL3JlcG9ydHNcL2R1bW15LTUuanBnIiwicm91dGUiOm51bGx9LCJfZmxhc2giOnsib2xkIjpbXSwibmV3IjpbXX19', 1780272260),
-('MciVU1spQFmMPvth6q3fSMwfVCVeOBiA5T9hhaNF', NULL, '127.0.0.1', 'Dart/3.11 (dart:io)', 'eyJfdG9rZW4iOiJydUgzTDc0WW41ZkZQekx0bUxuRm1lYmpMTXU3YzJ0WDEyNzNOMU80IiwiX3ByZXZpb3VzIjp7InVybCI6Imh0dHA6XC9cLzEwLjAuMi4yOjgwMDBcL3N0b3JhZ2VcL3JlcG9ydHNcL2R1bW15LTIuanBnIiwicm91dGUiOm51bGx9LCJfZmxhc2giOnsib2xkIjpbXSwibmV3IjpbXX19', 1780272261),
-('mO2g1nd8tMoXvYTuUKq3lfdg3CR41sg4GCpivszD', NULL, '127.0.0.1', 'Dart/3.11 (dart:io)', 'eyJfdG9rZW4iOiJnOXpNUDBFUzlMa3p4c0RhdkJob3k1ZlNGZVhSWXRlYzBETk0wZmYzIiwiX3ByZXZpb3VzIjp7InVybCI6Imh0dHA6XC9cLzEwLjAuMi4yOjgwMDBcL3N0b3JhZ2VcL3JlcG9ydHNcL2R1bW15LTQuanBnIiwicm91dGUiOm51bGx9LCJfZmxhc2giOnsib2xkIjpbXSwibmV3IjpbXX19', 1780272261),
-('P4irtmg5W0gx3AAY6MJHJR7sjp8EJesEoKoqQWVD', NULL, '127.0.0.1', 'Dart/3.11 (dart:io)', 'eyJfdG9rZW4iOiJpZU5kc3VVeHZsYXd6QzlTaFpJZ0hJbkhjQTJjZ1BTZm9DRmRwc0FvIiwiX3ByZXZpb3VzIjp7InVybCI6Imh0dHA6XC9cLzEwLjAuMi4yOjgwMDBcL3N0b3JhZ2VcL3JlcG9ydHNcL2R1bW15LTEuanBnIiwicm91dGUiOm51bGx9LCJfZmxhc2giOnsib2xkIjpbXSwibmV3IjpbXX19', 1780272261),
-('p75MnqGzbUybsGpieOdCJZtWlaqOzlgXiJAX9xt9', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36', 'eyJfdG9rZW4iOiJNeHg1cFNBcGRqZ1Z6ajYwb1R5dVVaR1p5T3UxSDJRVE1Dc2N5WDJoIiwiX2ZsYXNoIjp7Im5ldyI6W10sIm9sZCI6W119LCJfcHJldmlvdXMiOnsidXJsIjoiaHR0cDpcL1wvMTI3LjAuMC4xOjgwMDBcL2FkbWluXC9yZXBvcnRzXC8xIiwicm91dGUiOiJhZG1pbi5yZXBvcnRzLnNob3cifSwibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiOjF9', 1780271891);
-
 -- --------------------------------------------------------
 
 --
@@ -334,12 +318,12 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `role`, `is_active`, `fcm_token`, `remember_token`, `created_at`, `updated_at`) VALUES
-(1, 'Campus Admin', 'admin@campuslostfound.com', NULL, '$2y$12$ZAVcaAWdi5lQSBizCvelaeLcPAFN6ZczM9a5hK0IuWcjIRBBhlUtm', 'admin', 1, NULL, NULL, '2026-05-31 16:51:52', '2026-05-31 16:51:52'),
-(2, 'Budi Santoso', 'budi@student.telkomuniversity.ac.id', NULL, '$2y$12$YLMKvAGLlvqc8GR.aXIiYOEOV3y2D7VNUrLL6kS/2U2g73dHo7H3y', 'user', 1, 'ckXc2Y2lTiKhQAqDJnDpzB:APA91bGt5xxo3n-65HX-pX3Pu8sx4b7kX52P3COz6qzdC6iG8Z8FWq5T7Y1iPYizSePs3vNqcSvGlHnxKWLEuePp6rmVJG3b1NN5CcRoVDkTx0k3Cu5y8io', NULL, '2026-05-31 16:51:53', '2026-05-31 17:04:19'),
-(3, 'Siti Aminah', 'siti@student.telkomuniversity.ac.id', NULL, '$2y$12$CJjfkd9X62FXjnkqe7963.X1tbpUgLvUHzYld7htOALGpjMQJVy4u', 'user', 1, NULL, NULL, '2026-05-31 16:51:53', '2026-05-31 16:51:53'),
-(4, 'Andi Pratama', 'andi@student.telkomuniversity.ac.id', NULL, '$2y$12$RV2xGna3fwejYW53idJgzu0Uf4JUlI50Nw6O8WMB.fQ7VnhxxZt/e', 'user', 1, NULL, NULL, '2026-05-31 16:51:53', '2026-05-31 16:51:53'),
-(5, 'Farah Nabila', 'farah@student.telkomuniversity.ac.id', NULL, '$2y$12$IuV35t0he4zs51IaLhqCaeFWSKLESC8DD4/C6/Lm83oG1UARPnDUC', 'user', 1, NULL, NULL, '2026-05-31 16:51:53', '2026-05-31 16:51:53'),
-(6, 'Cahyo Nugroho', 'cahyo@student.telkomuniversity.ac.id', NULL, '$2y$12$zNXMhlOJaAXEIBzCGjnLBOTZ.D2zwvIKks.73VgSYiWWR1n9NXQ/6', 'user', 1, NULL, NULL, '2026-05-31 16:51:53', '2026-05-31 16:51:53');
+(1, 'Campus Admin', 'admin@campuslostfound.com', NULL, '$2y$12$e1TOWSjZSYjaq/Ou31slDumhGkbdtZsi6MPnRrfoCjWdeXUd9YzCm', 'admin', 1, NULL, NULL, '2026-06-06 00:31:30', '2026-06-06 00:31:30'),
+(2, 'Budi Santoso', 'budi@student.telkomuniversity.ac.id', NULL, '$2y$12$3Vn5wm7K5WVUqw6cmDx04.6No.C0r4/fn22XPuw.sLMt02Nllxfye', 'user', 1, NULL, NULL, '2026-06-06 00:31:30', '2026-06-06 00:31:30'),
+(3, 'Siti Aminah', 'siti@student.telkomuniversity.ac.id', NULL, '$2y$12$vKuMmS1F2xf0db0dyDJ8i.yBwXZvPkGcXW6AoGpVjnZ83CaWFn2xa', 'user', 1, NULL, NULL, '2026-06-06 00:31:30', '2026-06-06 00:31:30'),
+(4, 'Andi Pratama', 'andi@student.telkomuniversity.ac.id', NULL, '$2y$12$4U5AIE44xcw2BeG9t2CGeOnpLobkLKUzQVZOJqTKU/jt8MDEQjh8W', 'user', 1, NULL, NULL, '2026-06-06 00:31:30', '2026-06-06 00:31:30'),
+(5, 'Farah Nabila', 'farah@student.telkomuniversity.ac.id', NULL, '$2y$12$1FcB4xlr6iaiFcAAItEWeuPCiX3lIvpLlkHZ3ZuIOc96ujs4ArMNK', 'user', 1, NULL, NULL, '2026-06-06 00:31:31', '2026-06-06 00:31:31'),
+(6, 'Cahyo Nugroho', 'cahyo@student.telkomuniversity.ac.id', NULL, '$2y$12$iZGkEHAP59ceHm56whVz3OlP5cFWFHcJ8dCLq0ylCYiMZ4s5uT88u', 'user', 1, NULL, NULL, '2026-06-06 00:31:31', '2026-06-06 00:31:31');
 
 --
 -- Indexes for dumped tables
@@ -470,7 +454,7 @@ ALTER TABLE `jobs`
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `notifications`
@@ -482,7 +466,7 @@ ALTER TABLE `notifications`
 -- AUTO_INCREMENT for table `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
-  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `reports`
