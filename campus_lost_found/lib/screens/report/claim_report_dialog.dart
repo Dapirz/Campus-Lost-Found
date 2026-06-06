@@ -23,6 +23,7 @@ class ClaimReportDialog extends StatefulWidget {
 class _ClaimReportDialogState extends State<ClaimReportDialog> {
   final _formKey = GlobalKey<FormState>();
   final _descriptionController = TextEditingController();
+  final _socialController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
   
   File? _selectedImage;
@@ -31,6 +32,7 @@ class _ClaimReportDialogState extends State<ClaimReportDialog> {
   @override
   void dispose() {
     _descriptionController.dispose();
+    _socialController.dispose();
     super.dispose();
   }
 
@@ -80,6 +82,9 @@ class _ClaimReportDialogState extends State<ClaimReportDialog> {
     final result = await ReportService().submitClaim(
       reportId: widget.reportId,
       description: _descriptionController.text.trim(),
+      contactSocial: _socialController.text.trim().isEmpty
+          ? null
+          : _socialController.text.trim(),
       image: _selectedImage,
       token: widget.token,
     );
@@ -193,6 +198,48 @@ class _ClaimReportDialogState extends State<ClaimReportDialog> {
                     }
                     return null;
                   },
+                ),
+                const SizedBox(height: 16),
+
+                // Form Input: Kontak Sosial Media
+                const Text(
+                  'Social Media Contact (Optional)',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Provide your social media so the finder can contact you.',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textMuted,
+                    height: 1.3,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                TextFormField(
+                  controller: _socialController,
+                  enabled: !_isSubmitting,
+                  style: const TextStyle(fontSize: 13, color: AppColors.textDark),
+                  decoration: InputDecoration(
+                    hintText: 'e.g. @username (Instagram/WhatsApp/LINE)',
+                    hintStyle: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+                    prefixIcon: const Icon(Icons.alternate_email, size: 20, color: AppColors.textMuted),
+                    filled: true,
+                    fillColor: AppColors.neutral,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: AppColors.borderDefault),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
                 ),
                 const SizedBox(height: 16),
 

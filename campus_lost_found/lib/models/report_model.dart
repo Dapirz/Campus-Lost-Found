@@ -76,6 +76,27 @@ class ReportActiveClaimModel {
   }
 }
 
+/// Model info penuntut yang klaimnya telah disetujui (untuk dilihat oleh pelapor).
+class ApprovedClaimantModel {
+  final String name;
+  final String? contactSocial;
+  final String? claimCode;
+
+  ApprovedClaimantModel({
+    required this.name,
+    this.contactSocial,
+    this.claimCode,
+  });
+
+  factory ApprovedClaimantModel.fromJson(Map<String, dynamic> json) {
+    return ApprovedClaimantModel(
+      name: json['name'] ?? 'Unknown',
+      contactSocial: json['contact_social'],
+      claimCode: json['claim_code'],
+    );
+  }
+}
+
 /// Model laporan.
 class ReportModel {
   final int id;
@@ -92,6 +113,7 @@ class ReportModel {
   final String? rejectionReason;
   final String? adminNotes;
   final ReportActiveClaimModel? activeClaim; // Klaim aktif dari pengguna yang sedang login
+  final ApprovedClaimantModel? approvedClaimant; // Penuntut yang disetujui (dilihat oleh pemilik laporan)
 
   ReportModel({
     required this.id,
@@ -108,6 +130,7 @@ class ReportModel {
     this.rejectionReason,
     this.adminNotes,
     this.activeClaim,
+    this.approvedClaimant,
   });
 
   factory ReportModel.fromJson(Map<String, dynamic> json) {
@@ -137,6 +160,9 @@ class ReportModel {
       adminNotes: json['admin_notes'],
       activeClaim: json['active_claim'] != null
           ? ReportActiveClaimModel.fromJson(json['active_claim'])
+          : null,
+      approvedClaimant: json['approved_claimant'] != null
+          ? ApprovedClaimantModel.fromJson(json['approved_claimant'])
           : null,
     );
   }

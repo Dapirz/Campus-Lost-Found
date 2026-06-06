@@ -228,8 +228,8 @@ class AdminReportController extends Controller
                 ->where('status', 'pending')
                 ->update(['status' => 'rejected']);
 
-            // 4. Kirim notifikasi database dan Firebase ke User B (Claimant)
-            $claimantMsg = 'Klaim Anda untuk "' . $report->title . '" telah disetujui! Silakan ambil barang Anda di Pos Satpam Utama dengan kode klaim: ' . $claimCode;
+            // 4. Send database and Firebase notification to User B (Claimant)
+            $claimantMsg = 'Your claim for "' . $report->title . '" has been approved! Please retrieve your item using claim code: ' . $claimCode;
             Notification::query()->create([
                 'user_id' => $claim->user_id,
                 'type' => 'claim_approved',
@@ -247,8 +247,12 @@ class AdminReportController extends Controller
                 );
             }
 
-            // 5. Kirim notifikasi database dan Firebase ke User A (Reporter / Finder)
-            $reporterMsg = 'Laporan "' . $report->title . '" Anda telah disetujui untuk diserahkan ke pemiliknya. Mohon titipkan/serahkan barang tersebut ke Pos Satpam Utama.';
+            // 5. Send database and Firebase notification to User A (Reporter / Finder)
+            // Include claimant's social media contact so reporter can contact the owner
+            $reporterMsg = 'Your report "' . $report->title . '" has been approved for handover to its owner. Please coordinate the handover of the item.';
+            if (!empty($claim->contact_social)) {
+                $reporterMsg .= ' Owner contact: ' . $claim->contact_social;
+            }
             Notification::query()->create([
                 'user_id' => $report->user_id,
                 'type' => 'handover_pending',
@@ -291,8 +295,8 @@ class AdminReportController extends Controller
                 'status' => 'rejected',
             ]);
 
-            // Kirim notifikasi database dan Firebase ke User B (Claimant)
-            $msg = 'Klaim Anda untuk "' . $report->title . '" ditolak karena bukti kepemilikan kurang kuat.';
+            // Your claim for "..." has been rejected because the proof of ownership is insufficient.
+            $msg = 'Your claim for "' . $report->title . '" has been rejected because the proof of ownership is insufficient.';
             Notification::query()->create([
                 'user_id' => $claim->user_id,
                 'type' => 'claim_rejected',

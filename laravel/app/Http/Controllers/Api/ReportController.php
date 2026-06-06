@@ -89,6 +89,7 @@ class ReportController extends Controller
 
         // Cari apakah ada klaim aktif oleh user yang sedang login
         $activeClaim = null;
+        $approvedClaimant = null;
         $user = auth('sanctum')->user();
         if ($user) {
             $claim = \App\Models\Claim::query()
@@ -102,6 +103,24 @@ class ReportController extends Controller
                     'status'     => $claim->status,
                     'claim_code' => $claim->claim_code,
                 ];
+            }
+
+            // Jika user adalah pemilik laporan dan status laporan adalah collection_pending,
+            // sertakan info penuntut (claimant) yang disetujui.
+            if ($user->id === $report->user_id && $report->status === 'collection_pending') {
+                $approvedClaim = \App\Models\Claim::query()
+                    ->where('report_id', $report->id)
+                    ->where('status', 'approved')
+                    ->with('user:id,name')
+                    ->first();
+
+                if ($approvedClaim && $approvedClaim->user) {
+                    $approvedClaimant = [
+                        'name'           => $approvedClaim->user->name,
+                        'contact_social' => $approvedClaim->contact_social,
+                        'claim_code'     => $approvedClaim->claim_code,
+                    ];
+                }
             }
         }
 
@@ -125,6 +144,7 @@ class ReportController extends Controller
                 ]),
                 'reporter'   => $report->user ? ['id' => $report->user->id, 'name' => $report->user->name] : null,
                 'active_claim' => $activeClaim,
+                'approved_claimant' => $approvedClaimant,
                 'created_at' => $report->created_at->toIso8601String(),
             ],
         ]);

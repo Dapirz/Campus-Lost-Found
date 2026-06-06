@@ -20,6 +20,7 @@ class Claim extends Model
         'user_id',
         'proof_description',
         'proof_image_url',
+        'contact_social',
         'status',
         'claim_code',
     ];

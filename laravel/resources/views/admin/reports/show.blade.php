@@ -202,6 +202,7 @@
                                         <th>Claimant</th>
                                         <th>Proof Description</th>
                                         <th>Proof Image</th>
+                                        <th>Social Media</th>
                                         <th>Status</th>
                                         <th>Code</th>
                                         <th>Submitted At</th>
@@ -216,9 +217,7 @@
                                                 <small class="text-muted">{{ $claim->user->email }}</small>
                                             </td>
                                             <td>
-                                                <span class="d-inline-block text-truncate" style="max-width: 200px;" title="{{ $claim->proof_description }}">
-                                                    {{ $claim->proof_description }}
-                                                </span>
+                                                <span style="white-space: pre-wrap; word-break: break-word;">{{ $claim->proof_description }}</span>
                                             </td>
                                             <td>
                                                 @if ($claim->proof_image_url)
@@ -235,6 +234,13 @@
                                                     </a>
                                                 @else
                                                     <span class="text-muted small">No photo</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if ($claim->contact_social)
+                                                    <span style="word-break: break-word;">{{ $claim->contact_social }}</span>
+                                                @else
+                                                    <span class="text-muted small">-</span>
                                                 @endif
                                             </td>
                                             <td>

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../config/app_colors.dart';
 import '../../models/report_model.dart';
@@ -184,6 +185,10 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   /// Body content
   Widget _buildBody() {
     final report = _report!;
+    final authProvider = context.read<AuthProvider>();
+    final isOwner = authProvider.isLoggedIn &&
+        authProvider.user != null &&
+        authProvider.user!.id == report.reporter.id;
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -193,6 +198,14 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
           // Judul + Tanggal + Lokasi
           _buildTitleSection(report),
           const SizedBox(height: 12),
+
+          // Card Info Penuntut yang Disetujui (Khusus Pemilik Laporan)
+          if (isOwner &&
+              report.status == 'collection_pending' &&
+              report.approvedClaimant != null) ...[
+            _buildApprovedClaimantCard(report),
+            const SizedBox(height: 12),
+          ],
 
           // Card Status Klaim Pengguna (jika ada klaim aktif)
           if (report.activeClaim != null) ...[
@@ -228,6 +241,188 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
           if (report.images.length > 1) _buildGalleryCard(report),
 
           const SizedBox(height: 80), // space untuk bottom button
+        ],
+      ),
+    );
+  }
+
+  /// Card Info Penuntut yang Disetujui (Dilihat oleh pemilik laporan)
+  Widget _buildApprovedClaimantCard(ReportModel report) {
+    final claimant = report.approvedClaimant;
+    if (claimant == null) return const SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFECFDF5), // Hijau sangat muda
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFA7F3D0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(
+                Icons.check_circle_outline,
+                color: Color(0xFF059669),
+                size: 20,
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Claim Approved by Admin',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF065F46),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Please contact the claimant below to coordinate the handover of the item:',
+            style: TextStyle(
+              fontSize: 13,
+              color: Color(0xFF047857),
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD1FAE5),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFF6EE7B7)),
+                ),
+                child: Center(
+                  child: Text(
+                    _getInitials(claimant.name),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF059669),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      claimant.name,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF064E3B),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    InkWell(
+                      onTap: () {
+                        if (claimant.contactSocial != null &&
+                            claimant.contactSocial!.isNotEmpty) {
+                          Clipboard.setData(
+                              ClipboardData(text: claimant.contactSocial!));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                  'Username "${claimant.contactSocial}" copied to clipboard'),
+                              backgroundColor: AppColors.success,
+                              duration: const Duration(seconds: 2),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      borderRadius: BorderRadius.circular(4),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 2, horizontal: 4),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.alternate_email,
+                              size: 14,
+                              color: Color(0xFF059669),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              claimant.contactSocial ?? '-',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF047857),
+                                fontWeight: FontWeight.w500,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            const Icon(
+                              Icons.copy,
+                              size: 12,
+                              color: Color(0xFF059669),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (claimant.claimCode != null && claimant.claimCode!.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            const Divider(color: Color(0xFFA7F3D0), height: 1),
+            const SizedBox(height: 16),
+            const Text(
+              'Unique Verification Code:',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF047857),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFD1FAE5),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFF6EE7B7)),
+              ),
+              child: Center(
+                child: Text(
+                  claimant.claimCode!,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.5,
+                    color: Color(0xFF065F46),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -796,7 +991,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
             ),
             const SizedBox(height: 12),
             const Text(
-              'Please meet the security guard (Satpam) at the nearest post and show the following claim code to retrieve your item:',
+              'Please show the following claim code to the finder/reporter to retrieve your item:',
               style: TextStyle(
                 fontSize: 12,
                 color: Color(0xFF047857),

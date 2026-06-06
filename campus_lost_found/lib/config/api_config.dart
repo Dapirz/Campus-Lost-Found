@@ -57,13 +57,19 @@ class ApiConfig {
     }
 
     // Pola ekspresi reguler untuk menerjemahkan notifikasi penitipan barang penemu secara dinamis
+    // Mendukung format dengan dan tanpa kontak sosial media pemilik
     final handoverPendingRegex = RegExp(
-      r'^Laporan "(.+)" Anda telah disetujui untuk diserahkan ke pemiliknya\. Mohon titipkan/serahkan barang tersebut ke Pos Satpam Utama\.$',
+      r'^Laporan "(.+)" Anda telah disetujui untuk diserahkan ke pemiliknya\. Mohon titipkan/serahkan barang tersebut ke Pos Satpam Utama\.(?: Kontak pemilik: (.+))?$',
     );
     if (handoverPendingRegex.hasMatch(message)) {
       final match = handoverPendingRegex.firstMatch(message);
       final title = match?.group(1) ?? '';
-      return 'Your report "$title" has been approved to be returned to its owner. Please hand over the item to the Main Security Post.';
+      final contact = match?.group(2);
+      var translated = 'Your report "$title" has been approved to be returned to its owner. Please hand over the item to the Main Security Post.';
+      if (contact != null && contact.isNotEmpty) {
+        translated += ' Owner contact: $contact';
+      }
+      return translated;
     }
 
     // Pola ekspresi reguler untuk menerjemahkan notifikasi penolakan klaim secara dinamis

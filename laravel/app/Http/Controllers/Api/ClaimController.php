@@ -61,6 +61,7 @@ class ClaimController extends Controller
         $validated = $request->validate([
             'proof_description' => ['required', 'string', 'min:10'],
             'proof_image'       => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+            'contact_social'    => ['nullable', 'string', 'max:255'],
         ]);
 
         $claim = DB::transaction(function () use ($validated, $request, $report) {
@@ -77,6 +78,7 @@ class ClaimController extends Controller
                 'user_id'           => $request->user()->id,
                 'proof_description' => $validated['proof_description'],
                 'proof_image_url'   => $proofImageUrl,
+                'contact_social'    => $validated['contact_social'] ?? null,
                 'status'            => 'pending',
             ]);
         });
@@ -133,8 +135,8 @@ class ClaimController extends Controller
                 'status' => 'resolved',
             ]);
 
-            // 3. Simpan notifikasi database untuk pelapor asli (User A)
-            $message = 'Laporan "' . $claim->report->title . '" Anda telah berhasil diambil oleh pemiliknya yang sah.';
+             // 3. Simpan notifikasi database untuk pelapor asli (User A)
+            $message = 'Your report "' . $claim->report->title . '" has been successfully retrieved by its rightful owner.';
             Notification::query()->create([
                 'user_id' => $claim->report->user_id,
                 'type'    => 'claim_received',
@@ -156,7 +158,7 @@ class ClaimController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Konfirmasi terima barang berhasil, laporan kini ditandai selesai',
+            'message' => 'Handover confirmation successful, report marked as resolved',
         ]);
     }
 }

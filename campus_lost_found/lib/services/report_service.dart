@@ -294,6 +294,7 @@ class ReportService {
   Future<Map<String, dynamic>> submitClaim({
     required int reportId,
     required String description,
+    String? contactSocial,
     File? image,
     required String token,
   }) async {
@@ -307,6 +308,11 @@ class ReportService {
 
       // Bidang formulir
       request.fields['proof_description'] = description;
+
+      // Kontak sosial media (opsional)
+      if (contactSocial != null && contactSocial.isNotEmpty) {
+        request.fields['contact_social'] = contactSocial;
+      }
 
       // Lampirkan gambar bukti jika ada
       if (image != null) {
