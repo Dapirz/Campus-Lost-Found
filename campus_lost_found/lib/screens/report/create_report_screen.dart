@@ -520,7 +520,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
             : const Icon(Icons.send_outlined, size: 18),
         label: Text(
           _isSubmitting
-              ? 'Mengirim...'
+              ? 'Submitting...'
               : 'Submit ${_selectedType == 'found' ? 'Found' : 'Lost'} Item',
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),

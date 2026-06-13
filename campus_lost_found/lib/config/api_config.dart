@@ -12,85 +12,11 @@ class ApiConfig {
     };
   }
 
-  /// Menerjemahkan pesan dari Bahasa Indonesia (dari backend) ke Bahasa Inggris.
-  /// Fungsi ini digunakan di sisi aplikasi mobile (client-side) secara dinamis.
+  /// Menerjemahkan pesan API dari Bahasa Indonesia ke Bahasa Inggris.
+  /// Notifikasi sudah dikirim dalam Bahasa Inggris oleh backend,
+  /// sehingga fungsi ini hanya menangani pesan response API controller.
   static String translate(String? message) {
     if (message == null || message.isEmpty) return '';
-
-    // Pola ekspresi reguler untuk menerjemahkan notifikasi laporan yang diverifikasi secara dinamis
-    final verifiedRegex = RegExp(
-      r'^Laporan "(.+)" kamu sudah diverifikasi dan dipublikasikan\.$',
-    );
-    if (verifiedRegex.hasMatch(message)) {
-      final match = verifiedRegex.firstMatch(message);
-      final title = match?.group(1) ?? '';
-      return 'Your report "$title" has been verified and published.';
-    }
-
-    // Pola ekspresi reguler untuk menerjemahkan notifikasi laporan yang ditolak secara dinamis
-    final rejectedRegex = RegExp(
-      r'^Laporan "(.+)" kamu ditolak karena tidak memenuhi ketentuan\.$',
-    );
-    if (rejectedRegex.hasMatch(message)) {
-      final match = rejectedRegex.firstMatch(message);
-      final title = match?.group(1) ?? '';
-      return 'Your report "$title" has been rejected because it does not meet the guidelines.';
-    }
-
-    // Pola alternatif dengan kutipan tunggal jika ada
-    final verifiedRegex2 = RegExp(r"^Laporan '(.+)' kamu sudah diverifikasi$");
-    if (verifiedRegex2.hasMatch(message)) {
-      final match = verifiedRegex2.firstMatch(message);
-      final title = match?.group(1) ?? '';
-      return 'Your report "$title" has been verified.';
-    }
-
-    // Pola ekspresi reguler untuk menerjemahkan notifikasi persetujuan klaim secara dinamis
-    final claimApprovedRegex = RegExp(
-      r'^Klaim Anda untuk "(.+)" telah disetujui! Silakan ambil barang Anda di Pos Satpam Utama dengan kode klaim: (.+)$',
-    );
-    if (claimApprovedRegex.hasMatch(message)) {
-      final match = claimApprovedRegex.firstMatch(message);
-      final title = match?.group(1) ?? '';
-      final code = match?.group(2) ?? '';
-      return 'Your claim for "$title" has been approved! Please collect your item at the Main Security Post with claim code: $code';
-    }
-
-    // Pola ekspresi reguler untuk menerjemahkan notifikasi penitipan barang penemu secara dinamis
-    // Mendukung format dengan dan tanpa kontak sosial media pemilik
-    final handoverPendingRegex = RegExp(
-      r'^Laporan "(.+)" Anda telah disetujui untuk diserahkan ke pemiliknya\. Mohon titipkan/serahkan barang tersebut ke Pos Satpam Utama\.(?: Kontak pemilik: (.+))?$',
-    );
-    if (handoverPendingRegex.hasMatch(message)) {
-      final match = handoverPendingRegex.firstMatch(message);
-      final title = match?.group(1) ?? '';
-      final contact = match?.group(2);
-      var translated = 'Your report "$title" has been approved to be returned to its owner. Please hand over the item to the Main Security Post.';
-      if (contact != null && contact.isNotEmpty) {
-        translated += ' Owner contact: $contact';
-      }
-      return translated;
-    }
-
-    // Pola ekspresi reguler untuk menerjemahkan notifikasi penolakan klaim secara dinamis
-    final claimRejectedRegex = RegExp(
-      r'^Klaim Anda untuk "(.+)" ditolak karena bukti kepemilikan kurang kuat\.$',
-    );
-    if (claimRejectedRegex.hasMatch(message)) {
-      final match = claimRejectedRegex.firstMatch(message);
-      final title = match?.group(1) ?? '';
-      return 'Your claim for "$title" has been rejected because the proof of ownership is insufficient.';
-    }
-
-    // Pola ekspresi reguler untuk menerjemahkan notifikasi serah-terima klaim berhasil secara dinamis
-    final claimReceivedRegex = RegExp(
-      r'^Laporan "(.+)" Anda telah berhasil diambil oleh pemiliknya yang sah\.$',
-    );
-    if (claimReceivedRegex.hasMatch(message)) {
-      final match = claimReceivedRegex.firstMatch(message);
-      final title = match?.group(1) ?? '';
-      return 'Your report "$title" has been successfully retrieved by its rightful owner.';
-    }
 
     // Kamus statis untuk menerjemahkan pesan sukses/gagal dari API controller
     const translations = {
